@@ -149,16 +149,24 @@ th{color:var(--muted); font-weight:600; font-size:12px;}
   border-radius:20px 20px 0 0; padding:18px 18px calc(18px + env(safe-area-inset-bottom));
   position:relative; -webkit-overflow-scrolling:touch;
 }
+@media (min-width:640px){
+  .modal-overlay{align-items:center; padding:20px;}
+  .modal-panel{max-width:560px; border-radius:20px; max-height:90vh;}
+}
 .modal-close{
   position:absolute; top:14px; right:14px; background:var(--chip-bg); border:none; border-radius:50%;
   width:30px; height:30px; display:flex; align-items:center; justify-content:center; color:var(--muted); cursor:pointer;
 }
 .modal-close svg{width:16px; height:16px;}
-.technique-anim{
-  background:var(--muscle-bg); border-radius:14px; margin:4px 0 14px; padding:10px;
-  display:flex; align-items:center; justify-content:center;
+.technique-anim{margin:4px 0 14px;}
+.technique-anim iframe{
+  display:block; width:100%; aspect-ratio:16/9; height:auto; border:none;
+  border-radius:14px; background:var(--muscle-bg);
 }
-.technique-anim svg{width:100%; max-width:220px; height:auto; display:block;}
+.technique-yt-link{
+  display:inline-block; margin-top:8px; font-size:12.5px; font-weight:600;
+  color:var(--muted); text-decoration:none;
+}
 .technique-title{font-family:Manrope; font-size:17px; font-weight:800; margin-bottom:12px; padding-right:28px;}
 .technique-block{margin-bottom:14px;}
 .technique-label{font-family:Manrope; font-weight:800; font-size:12.5px; text-transform:uppercase; letter-spacing:.03em; color:var(--ok); margin-bottom:6px;}
@@ -435,9 +443,9 @@ async function renderExercises(){
   $$(".video-link", list).forEach(btn=>{
     btn.addEventListener("click", ()=>{
       const ex = decodeURIComponent(btn.dataset.ex);
-      const anim = TECHNIQUE_ANIMATIONS[ex];
-      if(anim){
-        openTechniqueModal(ex, anim);
+      const data = TECHNIQUE_VIDEOS[ex];
+      if(data){
+        openTechniqueModal(ex, data);
       } else {
         window.open(btn.dataset.video, "_blank", "noopener");
       }
@@ -586,9 +594,17 @@ function muscleDiagram(item){
  * sin dependencias externas), no se usan GIFs ni video de terceros.
  * Se genera de forma perezosa: solo al abrir el modal (ver openTechniqueModal).
  */
-const TECHNIQUE_ANIMATIONS = {
+/*
+ * Video de técnica por ejercicio: reproductor oficial embebido de YouTube
+ * (youtube-nocookie.com), cargado solo al abrir el modal (ver
+ * openTechniqueModal). No se descarga, aloja ni modifica ningún video.
+ * Selección manual por relevancia de búsqueda — ver conversación para el
+ * detalle canal/motivo de cada uno. Si algún video deja de estar disponible
+ * para embed, basta con reemplazar su videoId aquí.
+ */
+const TECHNIQUE_VIDEOS = {
   "Sentadilla (back squat)": {
-    build: buildSquatAnim,
+    videoId: "sI-CVQ1kfmc",
     pasos: [
       "Pies al ancho de hombros, pecho arriba, mirada al frente.",
       "Baja flexionando cadera y rodillas a la vez, manteniendo la espalda neutra.",
@@ -600,7 +616,7 @@ const TECHNIQUE_ANIMATIONS = {
     ],
   },
   "Press banca (barra o mancuerna)": {
-    build: buildBenchPressAnim,
+    videoId: "7aQY3u0Dk-Q",
     pasos: [
       "Escápulas retraídas y pies firmes en el piso durante todo el movimiento.",
       "Baja la barra de forma controlada hasta rozar el pecho, cerca de la línea del pezón.",
@@ -612,7 +628,7 @@ const TECHNIQUE_ANIMATIONS = {
     ],
   },
   "Remo con barra": {
-    build: buildRowAnim,
+    videoId: "qsbJcaAneaw",
     pasos: [
       "Cadera atrás, torso inclinado ~45°, espalda neutra durante toda la serie.",
       "Tira la barra hacia el abdomen bajo llevando los codos hacia atrás.",
@@ -623,100 +639,202 @@ const TECHNIQUE_ANIMATIONS = {
       "Encoger los hombros en vez de llevar los codos hacia atrás.",
     ],
   },
+  "Press militar mancuerna": {
+    videoId: "nDj1mBKEJcY",
+    pasos: [
+      "Core apretado y glúteos activados para proteger la zona lumbar.",
+      "Empuja las mancuernas hacia arriba en línea recta, sin arquear la espalda.",
+      "Baja controladamente hasta la altura de los hombros.",
+    ],
+    errores: [
+      "Arquear excesivamente la espalda baja para compensar falta de movilidad.",
+      "Empujar las mancuernas hacia adelante en vez de hacia arriba.",
+    ],
+  },
+  "Curl femoral tumbado": {
+    videoId: "9xbBr5Ytl8c",
+    pasos: [
+      "Ajusta el rodillo justo sobre el tendón de Aquiles.",
+      "Flexiona la rodilla llevando el rodillo hacia los glúteos, sin levantar la cadera del banco.",
+      "Controla el regreso hasta extender casi por completo.",
+    ],
+    errores: [
+      "Levantar la cadera para completar la repetición.",
+      "Usar impulso en vez de controlar todo el recorrido.",
+    ],
+  },
+  "Curl bíceps con barra o mancuerna": {
+    videoId: "uDLZNOqv3EA",
+    pasos: [
+      "Codos pegados al torso durante todo el movimiento.",
+      "Sube la barra contrayendo el bíceps, sin balancear el cuerpo.",
+      "Baja de forma controlada hasta extender el brazo.",
+    ],
+    errores: [
+      "Balancear el torso o usar impulso de cadera (\"cheat curl\").",
+      "Mover los codos hacia adelante al subir la barra.",
+    ],
+  },
+  "Peso muerto rumano": {
+    videoId: "pCrNlGFo7h4",
+    pasos: [
+      "Rodillas con flexión mínima; la cadera inicia el movimiento hacia atrás.",
+      "Baja la barra pegada a las piernas manteniendo la espalda neutra.",
+      "Detente cuando sientas el estiramiento en isquiotibiales y vuelve extendiendo cadera.",
+    ],
+    errores: [
+      "Redondear la espalda baja.",
+      "Flexionar demasiado las rodillas, convirtiéndolo en una sentadilla.",
+    ],
+  },
+  "Press inclinado mancuerna": {
+    videoId: "OhnoqtPEpzM",
+    pasos: [
+      "Banco entre 30-45°, escápulas retraídas.",
+      "Baja las mancuernas de forma controlada hasta la altura del pecho.",
+      "Empuja hacia arriba y ligeramente hacia adentro sin chocar las mancuernas.",
+    ],
+    errores: [
+      "Inclinar el banco a más de 45° (se parece más a un press militar).",
+      "Bajar las mancuernas demasiado rápido sin control.",
+    ],
+  },
+  "Jalón al pecho": {
+    videoId: "eSlKErmf5WU",
+    pasos: [
+      "Agarre un poco más ancho que los hombros, torso ligeramente inclinado atrás.",
+      "Tira la barra hacia la parte alta del pecho llevando los codos hacia abajo y atrás.",
+      "Controla el regreso hasta extender completamente los brazos.",
+    ],
+    errores: [
+      "Usar impulso balanceando el torso hacia atrás.",
+      "Tirar la barra hasta la nuca.",
+    ],
+  },
+  "Elevaciones laterales": {
+    videoId: "aVa9ce3SlSA",
+    pasos: [
+      "Codos con ligera flexión fija durante todo el movimiento.",
+      "Eleva los brazos hacia los lados hasta la altura de los hombros.",
+      "Baja de forma controlada sin dejar caer el peso.",
+    ],
+    errores: [
+      "Usar impulso balanceando el cuerpo para subir el peso.",
+      "Elevar por encima de la altura de los hombros encogiendo el trapecio.",
+    ],
+  },
+  "Extensión de cuádriceps": {
+    videoId: "ndnA6yvGoqQ",
+    pasos: [
+      "Ajusta el respaldo para que la rodilla quede alineada con el eje de la máquina.",
+      "Extiende la pierna contrayendo el cuádriceps sin despegar la espalda del respaldo.",
+      "Baja de forma controlada sin soltar el peso de golpe.",
+    ],
+    errores: [
+      "Usar impulso o rebote en la parte baja del movimiento.",
+      "Extender con tirón brusco en vez de contracción controlada.",
+    ],
+  },
+  "Tríceps en polea": {
+    videoId: "bluq3g4XIWg",
+    pasos: [
+      "Codos pegados al torso, fijos durante todo el recorrido.",
+      "Extiende los brazos empujando la barra o cuerda hacia abajo.",
+      "Controla el regreso sin dejar que el peso suba de golpe.",
+    ],
+    errores: [
+      "Separar los codos del torso, sumando el hombro al movimiento.",
+      "Inclinar el torso hacia adelante para ayudarse con el peso del cuerpo.",
+    ],
+  },
+  "Prensa de piernas": {
+    videoId: "ccDlOeZ90hs",
+    pasos: [
+      "Pies al ancho de hombros sobre la plataforma, espalda pegada al respaldo.",
+      "Baja controladamente hasta formar ~90° en la rodilla, sin despegar la zona lumbar.",
+      "Empuja sin extender ni bloquear las rodillas de golpe.",
+    ],
+    errores: [
+      "Bajar tanto que la zona lumbar se despegue del respaldo.",
+      "Bloquear las rodillas con fuerza en la extensión completa.",
+    ],
+  },
+  "Remo unilateral mancuerna": {
+    videoId: "ThYEWIpPB0o",
+    pasos: [
+      "Apoya rodilla y mano del mismo lado en el banco, espalda paralela al piso.",
+      "Tira la mancuerna hacia la cadera llevando el codo hacia atrás.",
+      "Baja controladamente hasta extender el brazo por completo.",
+    ],
+    errores: [
+      "Rotar el torso para ayudar a subir el peso.",
+      "Tirar hacia el hombro en vez de hacia la cadera.",
+    ],
+  },
+  "Press militar barra": {
+    videoId: "BShy9IEmrPg",
+    pasos: [
+      "Agarre al ancho de hombros, core y glúteos activados.",
+      "Empuja la barra en línea recta pasando cerca de la cara.",
+      "Bloquea arriba con la barra sobre la línea de los hombros, sin arquear la espalda.",
+    ],
+    errores: [
+      "Arquear excesivamente la espalda baja para compensar movilidad de hombro.",
+      "Empujar la barra hacia adelante en vez de en línea recta.",
+    ],
+  },
+  "Hip thrust": {
+    videoId: "vOuz3pUWU0Y",
+    pasos: [
+      "Apoya la parte alta de la espalda en el banco, barra sobre la cadera.",
+      "Empuja la cadera hacia arriba apretando los glúteos al máximo arriba.",
+      "Baja controladamente sin que la cadera toque el piso entre repeticiones.",
+    ],
+    errores: [
+      "Hiperextender la espalda baja en vez de terminar el movimiento con la cadera.",
+      "Empujar con las piernas en vez de con los glúteos.",
+    ],
+  },
+  "Face pull": {
+    videoId: "Q18p2QtQAes",
+    pasos: [
+      "Polea a la altura de la cara, agarre de cuerda con las palmas hacia adentro.",
+      "Tira hacia la cara separando las manos, llevando los codos hacia atrás y arriba.",
+      "Controla el regreso sin dejar que la polea tire bruscamente del brazo.",
+    ],
+    errores: [
+      "Usar demasiado peso y perder el recorrido completo.",
+      "Tirar hacia abajo en vez de hacia la cara/frente.",
+    ],
+  },
+  "Plancha / core": {
+    videoId: "nmX0DysvqcQ",
+    pasos: [
+      "Antebrazos y puntas de los pies apoyados, cuerpo en línea recta de cabeza a talones.",
+      "Aprieta abdomen y glúteos para evitar que la cadera caiga o suba.",
+      "Respira de forma controlada manteniendo la posición el tiempo indicado.",
+    ],
+    errores: [
+      "Dejar caer la cadera (arqueo lumbar).",
+      "Elevar demasiado la cadera, perdiendo la línea recta del cuerpo.",
+    ],
+  },
 };
 
-function buildSquatAnim(){
-  return `
-    <svg viewBox="0 0 200 200">
-      <style>
-        .sq-torso{transform-origin:100px 108px; animation:sqTorso 2.6s ease-in-out infinite;}
-        .sq-thigh{transform-origin:100px 108px; animation:sqThigh 2.6s ease-in-out infinite;}
-        .sq-shin{transform-origin:100px 150px; animation:sqShin 2.6s ease-in-out infinite;}
-        @keyframes sqTorso{0%,100%{transform:rotate(0deg);}45%,55%{transform:rotate(32deg);}}
-        @keyframes sqThigh{0%,100%{transform:rotate(0deg);}45%,55%{transform:rotate(-38deg);}}
-        @keyframes sqShin{0%,100%{transform:rotate(0deg);}45%,55%{transform:rotate(30deg);}}
-      </style>
-      <line x1="65" y1="187" x2="152" y2="187" stroke="#3A3D42" stroke-width="4" stroke-linecap="round"/>
-      <g class="sq-thigh">
-        <line x1="100" y1="108" x2="100" y2="150" stroke="#E7E9EC" stroke-width="11" stroke-linecap="round"/>
-        <g class="sq-shin">
-          <line x1="100" y1="150" x2="100" y2="187" stroke="#E7E9EC" stroke-width="10" stroke-linecap="round"/>
-          <line x1="100" y1="187" x2="124" y2="187" stroke="#E7E9EC" stroke-width="9" stroke-linecap="round"/>
-          <circle cx="100" cy="150" r="4.5" fill="#E8783C"/>
-        </g>
-      </g>
-      <g class="sq-torso">
-        <line x1="100" y1="108" x2="100" y2="68" stroke="#E7E9EC" stroke-width="14" stroke-linecap="round"/>
-        <line x1="100" y1="80" x2="86" y2="96" stroke="#E7E9EC" stroke-width="7" stroke-linecap="round"/>
-        <line x1="86" y1="96" x2="98" y2="72" stroke="#E7E9EC" stroke-width="7" stroke-linecap="round"/>
-        <rect x="78" y="63" width="42" height="6" rx="3" fill="#6FA8E0"/>
-        <circle cx="100" cy="55" r="11" fill="#E7E9EC"/>
-        <circle cx="100" cy="108" r="4.5" fill="#E8783C"/>
-      </g>
-    </svg>`;
-}
-
-function buildBenchPressAnim(){
-  return `
-    <svg viewBox="0 0 200 200">
-      <style>
-        .pb-upperarm{transform-origin:80px 138px; animation:pbUpper 2.6s ease-in-out infinite;}
-        .pb-forearm{transform-origin:62px 148px; animation:pbFore 2.6s ease-in-out infinite;}
-        @keyframes pbUpper{0%,100%{transform:rotate(0deg);}45%,55%{transform:rotate(119deg);}}
-        @keyframes pbFore{0%,100%{transform:rotate(0deg);}45%,55%{transform:rotate(-158deg);}}
-      </style>
-      <rect x="45" y="142" width="110" height="8" rx="2" fill="#3A3D42"/>
-      <line x1="55" y1="150" x2="55" y2="185" stroke="#3A3D42" stroke-width="4"/>
-      <line x1="140" y1="150" x2="140" y2="185" stroke="#3A3D42" stroke-width="4"/>
-      <line x1="118" y1="138" x2="140" y2="152" stroke="#E7E9EC" stroke-width="10" stroke-linecap="round"/>
-      <line x1="140" y1="152" x2="140" y2="183" stroke="#E7E9EC" stroke-width="9" stroke-linecap="round"/>
-      <line x1="140" y1="183" x2="156" y2="183" stroke="#E7E9EC" stroke-width="8" stroke-linecap="round"/>
-      <line x1="68" y1="138" x2="118" y2="138" stroke="#E7E9EC" stroke-width="14" stroke-linecap="round"/>
-      <circle cx="55" cy="131" r="11" fill="#E7E9EC"/>
-      <circle cx="80" cy="138" r="4.5" fill="#E8783C"/>
-      <g class="pb-upperarm">
-        <line x1="80" y1="138" x2="62" y2="148" stroke="#E7E9EC" stroke-width="9" stroke-linecap="round"/>
-        <g class="pb-forearm">
-          <line x1="62" y1="148" x2="78" y2="128" stroke="#E7E9EC" stroke-width="8" stroke-linecap="round"/>
-          <rect x="68" y="120" width="26" height="6" rx="3" fill="#6FA8E0"/>
-          <circle cx="62" cy="148" r="4" fill="#E8783C"/>
-        </g>
-      </g>
-    </svg>`;
-}
-
-function buildRowAnim(){
-  return `
-    <svg viewBox="0 0 200 200">
-      <style>
-        .rw-upperarm{transform-origin:95px 90px; animation:rwUpper 2.6s ease-in-out infinite;}
-        .rw-forearm{transform-origin:100px 130px; animation:rwFore 2.6s ease-in-out infinite;}
-        @keyframes rwUpper{0%,100%{transform:rotate(0deg);}45%,55%{transform:rotate(-61deg);}}
-        @keyframes rwFore{0%,100%{transform:rotate(0deg);}45%,55%{transform:rotate(33deg);}}
-      </style>
-      <line x1="65" y1="187" x2="175" y2="187" stroke="#3A3D42" stroke-width="4" stroke-linecap="round"/>
-      <line x1="150" y1="140" x2="153" y2="160" stroke="#E7E9EC" stroke-width="10" stroke-linecap="round"/>
-      <line x1="153" y1="160" x2="153" y2="185" stroke="#E7E9EC" stroke-width="9" stroke-linecap="round"/>
-      <line x1="153" y1="185" x2="170" y2="185" stroke="#E7E9EC" stroke-width="8" stroke-linecap="round"/>
-      <line x1="150" y1="140" x2="95" y2="90" stroke="#E7E9EC" stroke-width="13" stroke-linecap="round"/>
-      <circle cx="85" cy="78" r="11" fill="#E7E9EC"/>
-      <circle cx="95" cy="90" r="4.5" fill="#E8783C"/>
-      <g class="rw-upperarm">
-        <line x1="95" y1="90" x2="100" y2="130" stroke="#E7E9EC" stroke-width="9" stroke-linecap="round"/>
-        <g class="rw-forearm">
-          <line x1="100" y1="130" x2="112" y2="158" stroke="#E7E9EC" stroke-width="8" stroke-linecap="round"/>
-          <rect x="105" y="153" width="26" height="6" rx="3" fill="#6FA8E0" transform="rotate(20 118 156)"/>
-          <circle cx="100" cy="130" r="4" fill="#E8783C"/>
-        </g>
-      </g>
-    </svg>`;
-}
-
-function openTechniqueModal(name, anim){
+function openTechniqueModal(name, data){
   $("#techniqueTitle").textContent = name;
-  $("#techniqueAnim").innerHTML = anim.build();
-  $("#techniqueSteps").innerHTML = anim.pasos.map(p => `<li>${p}</li>`).join("");
-  $("#techniqueMistakes").innerHTML = anim.errores.map(e => `<li>${e}</li>`).join("");
+  $("#techniqueAnim").innerHTML = `
+    <iframe
+      src="https://www.youtube-nocookie.com/embed/${data.videoId}?rel=0"
+      title="Técnica: ${name}"
+      loading="lazy"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+      allowfullscreen
+    ></iframe>
+    <a class="technique-yt-link" href="https://www.youtube.com/watch?v=${data.videoId}" target="_blank" rel="noopener">Ver en YouTube ↗</a>
+  `;
+  $("#techniqueSteps").innerHTML = data.pasos.map(p => `<li>${p}</li>`).join("");
+  $("#techniqueMistakes").innerHTML = data.errores.map(e => `<li>${e}</li>`).join("");
   $("#techniqueModal").hidden = false;
   document.body.style.overflow = "hidden";
 }
