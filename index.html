@@ -16,6 +16,7 @@
 :root{
   --bg:#F5F5F2; --card:#FFFFFF; --ink:#1E2022; --muted:#6B7075; --line:#E6E6E1;
   --accent:#D9622B; --accent2:#3B6EA5; --accent-ink:#FFFFFF; --ok:#3F7D4F; --ok-bg:#E7F2E9;
+  --muscle-base:#B6B6AC;
   --chip-bg:#EFEFEA;
   font-size:16px;
 }
@@ -23,6 +24,7 @@
   :root{
     --bg:#15171A; --card:#1E2124; --ink:#F2F2ED; --muted:#9A9FA5; --line:#2B2F33;
     --accent:#E8783C; --accent2:#6FA8E0; --accent-ink:#171A1C; --ok:#5FB073; --ok-bg:#1E2E22;
+    --muscle-base:#4B4F54;
     --chip-bg:#2A2E32;
   }
 }
@@ -77,21 +79,27 @@ main{padding:14px 16px 24px;}
 .muscle-toggle.open svg{transform:rotate(180deg);}
 .muscle-panel{
   margin-top:12px; padding-top:12px; border-top:1px solid var(--line);
-  display:flex; align-items:center; gap:16px; flex-wrap:wrap;
 }
-.muscle-diagram{display:flex; align-items:flex-start; gap:16px; flex-wrap:wrap;}
-.muscle-diagram-bodies{display:flex; gap:10px;}
+.muscle-diagram{display:flex; flex-direction:column; gap:14px; width:100%;}
+.muscle-diagram-bodies{display:flex; justify-content:center; gap:22px;}
 .muscle-diagram-bodies > div{text-align:center;}
-.muscle-icon-lg{width:44px; height:66px; display:block;}
-.view-label{font-size:10px; color:var(--muted); margin-top:2px;}
-.muscle-legend{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:5px;}
+.anatomy-body{width:min(150px, 40vw); height:auto; display:block;}
+.anatomy-base{fill:var(--chip-bg); stroke:var(--line); stroke-width:1;}
+.muscle-region{stroke:var(--line); stroke-width:1;}
+.muscle-region.neutral{fill:var(--muscle-base);}
+.muscle-region.primary{fill:var(--accent);}
+.muscle-region.secondary{fill:var(--accent2);}
+.view-label{font-size:11px; color:var(--muted); margin-top:5px; font-weight:600;}
+.muscle-legend{
+  list-style:none; margin:0; padding:0;
+  display:flex; flex-wrap:wrap; justify-content:center; gap:8px 18px;
+}
 .muscle-legend li{font-size:12.5px; font-weight:600; display:flex; align-items:center; gap:6px;}
 .muscle-legend li::before{content:""; width:9px; height:9px; border-radius:3px; display:inline-block;}
 .muscle-legend li.primary{color:var(--ink);}
 .muscle-legend li.primary::before{background:var(--accent);}
 .muscle-legend li.secondary{color:var(--muted); font-weight:500;}
 .muscle-legend li.secondary::before{background:var(--accent2);}
-.muscle-highlight.secondary{fill:var(--accent2);}
 .sets{margin-top:10px; display:flex; flex-direction:column; gap:6px;}
 .set-row{display:grid; grid-template-columns:28px 1fr 1fr 52px; gap:8px; align-items:center;}
 .set-row .n{font-size:13px; color:var(--muted); font-weight:600;}
@@ -431,15 +439,50 @@ function muscleIcon(grupo){
     </svg>`;
 }
 
-function bodySvg(view, groups){
-  const highlights = groups
-    .filter(g => g.view === view)
-    .map(g => `<g class="muscle-highlight ${g.tone}">${MUSCLE_HIGHLIGHTS[g.name] || ""}</g>`)
-    .join("");
+const FRONT_BODY_BASE = `
+  <ellipse cx="50" cy="14" rx="11" ry="12"/>
+  <rect x="44" y="24" width="12" height="8" rx="2"/>
+  <path d="M32,34 Q50,29 68,34 L72,96 Q50,104 28,96 Z"/>
+  <rect x="15" y="74" width="10" height="26" rx="5"/><rect x="75" y="74" width="10" height="26" rx="5"/>
+  <ellipse cx="20" cy="103" rx="6" ry="7"/><ellipse cx="80" cy="103" rx="6" ry="7"/>
+  <rect x="32" y="144" width="12" height="30" rx="5"/><rect x="56" y="144" width="12" height="30" rx="5"/>
+  <ellipse cx="38" cy="178" rx="8" ry="5"/><ellipse cx="62" cy="178" rx="8" ry="5"/>
+`;
+const BACK_BODY_BASE = `
+  <ellipse cx="50" cy="14" rx="11" ry="12"/>
+  <rect x="44" y="24" width="12" height="8" rx="2"/>
+  <rect x="15" y="74" width="10" height="26" rx="5"/><rect x="75" y="74" width="10" height="26" rx="5"/>
+  <ellipse cx="20" cy="103" rx="6" ry="7"/><ellipse cx="80" cy="103" rx="6" ry="7"/>
+  <rect x="32" y="150" width="12" height="24" rx="5"/><rect x="56" y="150" width="12" height="24" rx="5"/>
+  <ellipse cx="38" cy="178" rx="8" ry="5"/><ellipse cx="62" cy="178" rx="8" ry="5"/>
+`;
+
+const FRONT_GROUP_SHAPES = {
+  "Hombro": `<circle cx="27" cy="40" r="10"/><circle cx="73" cy="40" r="10"/>`,
+  "Pecho": `<ellipse cx="41" cy="48" rx="11" ry="9"/><ellipse cx="59" cy="48" rx="11" ry="9"/>`,
+  "Bíceps": `<ellipse cx="21" cy="60" rx="7" ry="16"/><ellipse cx="79" cy="60" rx="7" ry="16"/>`,
+  "Core": `<rect x="42" y="60" width="16" height="34" rx="6"/>`,
+  "Cuádriceps": `<ellipse cx="40" cy="120" rx="10" ry="24"/><ellipse cx="60" cy="120" rx="10" ry="24"/>`,
+};
+const BACK_GROUP_SHAPES = {
+  "Espalda": `<path d="M30,34 Q50,28 70,34 L66,78 Q50,87 34,78 Z"/>`,
+  "Hombro": `<circle cx="27" cy="40" r="10"/><circle cx="73" cy="40" r="10"/>`,
+  "Tríceps": `<ellipse cx="21" cy="60" rx="7" ry="16"/><ellipse cx="79" cy="60" rx="7" ry="16"/>`,
+  "Glúteo": `<ellipse cx="50" cy="95" rx="19" ry="13"/>`,
+  "Isquiotibiales": `<ellipse cx="40" cy="128" rx="10" ry="22"/><ellipse cx="60" cy="128" rx="10" ry="22"/>`,
+};
+
+function anatomicalBody(view, highlightMap){
+  const base = view === "front" ? FRONT_BODY_BASE : BACK_BODY_BASE;
+  const groupShapes = view === "front" ? FRONT_GROUP_SHAPES : BACK_GROUP_SHAPES;
+  const regions = Object.entries(groupShapes).map(([name, shape]) => {
+    const tone = highlightMap[name] || "neutral";
+    return `<g class="muscle-region ${tone}" data-group="${name}">${shape}</g>`;
+  }).join("");
   return `
-    <svg viewBox="0 0 40 60" class="muscle-icon-lg">
-      <g class="muscle-body">${bodyShape()}</g>
-      ${highlights}
+    <svg viewBox="0 0 100 190" class="anatomy-body" role="img" aria-label="Vista ${view === "front" ? "frontal" : "posterior"}">
+      <g class="anatomy-base">${base}</g>
+      ${regions}
     </svg>`;
 }
 
@@ -449,11 +492,15 @@ function muscleDiagram(item){
     ...(item.sec || []).map(name => ({name, tone:"secondary", view: GROUP_VIEW[name]})),
   ];
   const names = [item.grupo, ...(item.sec || [])];
+  const frontMap = {};
+  const backMap = {};
+  groups.forEach(g => { (g.view === "front" ? frontMap : backMap)[g.name] = g.tone; });
+
   return `
     <div class="muscle-diagram">
       <div class="muscle-diagram-bodies">
-        <div>${bodySvg("front", groups)}<div class="view-label">Frente</div></div>
-        <div>${bodySvg("back", groups)}<div class="view-label">Espalda</div></div>
+        <div>${anatomicalBody("front", frontMap)}<div class="view-label">Frente</div></div>
+        <div>${anatomicalBody("back", backMap)}<div class="view-label">Espalda</div></div>
       </div>
       <ul class="muscle-legend">
         ${names.map((n,i) => `<li class="${i === 0 ? "primary" : "secondary"}">${n}</li>`).join("")}
