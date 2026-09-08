@@ -104,12 +104,18 @@ main{padding:14px 16px 24px;}
 .sets{margin-top:10px; display:flex; flex-direction:column; gap:6px;}
 .set-row{display:grid; grid-template-columns:28px 1fr 1fr 52px; gap:8px; align-items:center;}
 .set-row .n{font-size:13px; color:var(--muted); font-weight:600;}
+.field-unit{position:relative;}
 .set-row input{
   width:100%; border:1px solid var(--line); background:var(--bg); color:var(--ink);
-  border-radius:9px; padding:9px 8px; font-size:15px; text-align:center;
+  border-radius:9px; padding:9px 30px 9px 8px; font-size:15px; text-align:center;
   font-family:Inter;
 }
 .set-row input::placeholder{color:var(--muted); opacity:.7;}
+.unit-label{
+  position:absolute; right:9px; top:50%; transform:translateY(-50%);
+  font-size:10.5px; font-weight:700; color:var(--muted); pointer-events:none;
+  text-transform:uppercase; letter-spacing:.02em;
+}
 .set-btn{
   border:none; border-radius:9px; background:var(--chip-bg); color:var(--muted);
   font-weight:700; font-size:13px; padding:9px 0; cursor:pointer;
@@ -386,13 +392,19 @@ async function renderExercises(){
     for(let n=1; n<=item.series; n++){
       const saved = todaysLogs[item.ex + "_" + n];
       const hint = lastHint[n];
-      const wPlaceholder = hint ? `${hint.weight ?? ""} kg` : "kg";
-      const rPlaceholder = hint ? `${hint.reps ?? ""} reps` : "reps";
+      const wPlaceholder = hint?.weight ?? "";
+      const rPlaceholder = hint?.reps ?? "";
       setsHtml += `
         <div class="set-row" data-ex="${encodeURIComponent(item.ex)}" data-n="${n}">
           <div class="n">${n}</div>
-          <input type="number" inputmode="decimal" class="w-input" placeholder="${wPlaceholder}" value="${saved?.weight ?? ""}">
-          <input type="number" inputmode="numeric" class="r-input" placeholder="${rPlaceholder}" value="${saved?.reps ?? ""}">
+          <div class="field-unit">
+            <input type="number" inputmode="decimal" class="w-input" placeholder="${wPlaceholder}" value="${saved?.weight ?? ""}">
+            <span class="unit-label">kg</span>
+          </div>
+          <div class="field-unit">
+            <input type="number" inputmode="numeric" class="r-input" placeholder="${rPlaceholder}" value="${saved?.reps ?? ""}">
+            <span class="unit-label">reps</span>
+          </div>
           <button class="set-btn ${saved ? "done" : ""}">${saved ? "✓" : "Ok"}</button>
         </div>`;
     }
@@ -893,7 +905,7 @@ async function renderHistory(){
           <div class="bar-val">${top || "-"}kg</div>
         </div>`;
     });
-    html += `<div class="section-title">Registros</div><table><thead><tr><th>Fecha</th><th>Set</th><th>Peso</th><th>Reps</th></tr></thead><tbody>`;
+    html += `<div class="section-title">Registros</div><table><thead><tr><th>Fecha</th><th>Set</th><th>Peso (kg)</th><th>Reps</th></tr></thead><tbody>`;
     logs.forEach(l => {
       html += `<tr><td>${l.date}</td><td>${l.set_number}</td><td>${l.weight ?? "-"}</td><td>${l.reps ?? "-"}</td></tr>`;
     });
