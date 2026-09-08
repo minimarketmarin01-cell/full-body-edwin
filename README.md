@@ -64,3 +64,9 @@ La URL queda guardada en el celular (localStorage), no hay que repetirlo cada ve
 - Objetivo: hipertrofia/estética. RIR 2 en básicos, 1-1.5 en aislados.
 - Progresión: doble progresión (sube carga al completar el techo de reps en todas las series).
 - Deload: cada 5-6 semanas.
+
+## Créditos
+
+Los polígonos SVG del diagrama anatómico ("Músculos trabajados") están portados de
+[react-body-highlighter](https://github.com/giavinh79/react-body-highlighter) (© 2020 GV79,
+licencia MIT).
