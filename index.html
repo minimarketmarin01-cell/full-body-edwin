@@ -239,11 +239,7 @@ nav.bottom svg{width:20px; height:20px;}
   </section>
 
   <section class="view" id="view-ajustes">
-    <div class="settings-row">
-      <label>URL de la API (Cloudflare Worker)</label>
-      <input class="field-input" id="apiUrlInput" placeholder="https://fullbody-edwin-api.tuusuario.workers.dev">
-    </div>
-    <button class="btn-primary" id="saveApiUrl">Guardar</button>
+    <p class="status-line" style="margin-top:0;">La app se conecta sola a su base de datos. Usa este botón solo si algo no está guardando bien.</p>
     <button class="btn-secondary" id="testApiUrl">Probar conexión</button>
     <div class="status-line" id="apiStatus"></div>
   </section>
@@ -950,19 +946,11 @@ document.addEventListener("keydown", e=>{
   if(e.key === "Escape" && !$("#techniqueModal").hidden) closeTechniqueModal();
 });
 
-$("#saveApiUrl").addEventListener("click", ()=>{
-  apiUrl = $("#apiUrlInput").value.trim();
-  localStorage.setItem("fbe_api_url", apiUrl);
-  toast("URL guardada");
-  renderExercises();
-});
-
 $("#testApiUrl").addEventListener("click", async ()=>{
   const status = $("#apiStatus");
   status.textContent = "Probando…";
   try{
-    const url = ($("#apiUrlInput").value.trim()).replace(/\/$/,"");
-    const res = await fetch(url + "/api/health");
+    const res = await fetch(apiUrl.replace(/\/$/,"") + "/api/health");
     const data = await res.json();
     status.innerHTML = data.ok ? `<span class="status-dot" style="background:var(--ok)"></span>Conectado` : "Sin respuesta válida";
   }catch(e){
@@ -971,7 +959,6 @@ $("#testApiUrl").addEventListener("click", async ()=>{
 });
 
 $("#todayLabel").textContent = new Date().toLocaleDateString("es-CL", {weekday:"long", day:"numeric", month:"long"});
-$("#apiUrlInput").value = apiUrl;
 renderTabs();
 fillHistorySelect();
 renderVolumen();
