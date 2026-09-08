@@ -363,21 +363,24 @@ async function renderExercises(){
   const token = ++exRenderToken;
   const list = $("#exList");
   const day = PROGRAM[currentSession];
-  let todaysLogs = {};
-  try{
-    const logs = await api(`/api/logs?date=${todayISO()}`);
-    logs.forEach(l => { todaysLogs[l.exercise + "_" + l.set_number] = l; });
-  }catch(e){ /* sin conexión configurada aún */ }
+
+  const [logsResult, ...lastResults] = await Promise.allSettled([
+    api(`/api/logs?date=${todayISO()}`),
+    ...day.map(item => api(`/api/last?exercise=${encodeURIComponent(item.ex)}`)),
+  ]);
   if(token !== exRenderToken) return;
 
-  const cardsHtml = [];
-  for(const item of day){
+  let todaysLogs = {};
+  if(logsResult.status === "fulfilled"){
+    logsResult.value.forEach(l => { todaysLogs[l.exercise + "_" + l.set_number] = l; });
+  }
+
+  const cardsHtml = day.map((item, idx) => {
     let lastHint = {};
-    try{
-      const last = await api(`/api/last?exercise=${encodeURIComponent(item.ex)}`);
-      last.forEach(r => { lastHint[r.set_number] = r; });
-    }catch(e){}
-    if(token !== exRenderToken) return;
+    const lastRes = lastResults[idx];
+    if(lastRes.status === "fulfilled"){
+      lastRes.value.forEach(r => { lastHint[r.set_number] = r; });
+    }
 
     let setsHtml = "";
     for(let n=1; n<=item.series; n++){
@@ -396,7 +399,7 @@ async function renderExercises(){
 
     const videoUrl = "https://www.youtube.com/results?search_query=" + encodeURIComponent(item.ex + " técnica correcta");
 
-    cardsHtml.push(`
+    return `
       <div class="ex-head">
         <div>
           <div class="ex-name">${item.ex}</div>
@@ -420,10 +423,9 @@ async function renderExercises(){
       </div>
       <div class="muscle-panel" hidden>${muscleDiagram(item)}</div>
       <div class="sets">${setsHtml}</div>
-    `);
-  }
+    `;
+  });
 
-  if(token !== exRenderToken) return;
   list.innerHTML = "";
   cardsHtml.forEach(html => {
     const card = document.createElement("div");
