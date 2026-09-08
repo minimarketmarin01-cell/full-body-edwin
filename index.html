@@ -61,6 +61,11 @@ main{padding:14px 16px 24px;}
 }
 .ex-target{font-size:12.5px; color:var(--muted); margin-top:3px;}
 .ex-notes{font-size:12px; color:var(--muted); margin-top:6px; font-style:italic;}
+.video-link{
+  display:inline-flex; align-items:center; gap:5px; margin-top:9px;
+  font-size:12.5px; font-weight:600; color:var(--accent); text-decoration:none;
+}
+.video-link svg{width:14px; height:14px;}
 .sets{margin-top:10px; display:flex; flex-direction:column; gap:6px;}
 .set-row{display:grid; grid-template-columns:28px 1fr 1fr 52px; gap:8px; align-items:center;}
 .set-row .n{font-size:13px; color:var(--muted); font-weight:600;}
@@ -293,6 +298,8 @@ async function renderExercises(){
         </div>`;
     }
 
+    const videoUrl = "https://www.youtube.com/results?search_query=" + encodeURIComponent(item.ex + " técnica correcta");
+
     cardsHtml.push(`
       <div class="ex-head">
         <div>
@@ -302,6 +309,10 @@ async function renderExercises(){
         <div class="ex-badge">${item.grupo}</div>
       </div>
       ${item.notas ? `<div class="ex-notes">${item.notas}</div>` : ""}
+      <a class="video-link" href="${videoUrl}" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        Ver técnica
+      </a>
       <div class="sets">${setsHtml}</div>
     `);
   }
