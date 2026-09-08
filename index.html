@@ -67,8 +67,8 @@ main{padding:14px 16px 24px;}
 .ex-notes{font-size:12px; color:var(--muted); margin-top:6px; font-style:italic;}
 .ex-links{display:flex; align-items:center; gap:14px; margin-top:9px; flex-wrap:wrap;}
 .video-link{
-  display:inline-flex; align-items:center; gap:5px;
-  font-size:12.5px; font-weight:600; color:var(--accent); text-decoration:none;
+  display:inline-flex; align-items:center; gap:5px; background:none; border:none; padding:0;
+  font-family:Inter; font-size:12.5px; font-weight:600; color:var(--accent); text-decoration:none; cursor:pointer;
 }
 .video-link svg{width:14px; height:14px;}
 .muscle-toggle{
@@ -139,6 +139,31 @@ th{color:var(--muted); font-weight:600; font-size:12px;}
   z-index:50;
 }
 .toast.show{opacity:1;}
+.modal-overlay{
+  position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:60;
+  display:flex; align-items:flex-end; justify-content:center;
+}
+.modal-panel{
+  background:var(--card); width:100%; max-width:480px; max-height:88vh; overflow-y:auto;
+  border-radius:20px 20px 0 0; padding:18px 18px calc(18px + env(safe-area-inset-bottom));
+  position:relative; -webkit-overflow-scrolling:touch;
+}
+.modal-close{
+  position:absolute; top:14px; right:14px; background:var(--chip-bg); border:none; border-radius:50%;
+  width:30px; height:30px; display:flex; align-items:center; justify-content:center; color:var(--muted); cursor:pointer;
+}
+.modal-close svg{width:16px; height:16px;}
+.technique-anim{
+  background:var(--muscle-bg); border-radius:14px; margin:4px 0 14px; padding:10px;
+  display:flex; align-items:center; justify-content:center;
+}
+.technique-anim svg{width:100%; max-width:220px; height:auto; display:block;}
+.technique-title{font-family:Manrope; font-size:17px; font-weight:800; margin-bottom:12px; padding-right:28px;}
+.technique-block{margin-bottom:14px;}
+.technique-label{font-family:Manrope; font-weight:800; font-size:12.5px; text-transform:uppercase; letter-spacing:.03em; color:var(--ok); margin-bottom:6px;}
+.technique-label.errores{color:#B5482F;}
+.technique-list{margin:0; padding-left:18px; display:flex; flex-direction:column; gap:5px;}
+.technique-list li{font-size:13.5px; color:var(--ink); line-height:1.4;}
 nav.bottom{
   position:fixed; bottom:0; left:0; right:0; background:var(--card);
   border-top:1px solid var(--line); display:flex; padding:6px 4px calc(6px + env(safe-area-inset-bottom));
@@ -210,6 +235,25 @@ nav.bottom svg{width:20px; height:20px;}
 </main>
 
 <div class="toast" id="toast"></div>
+
+<div class="modal-overlay" id="techniqueModal" hidden>
+  <div class="modal-panel">
+    <button class="modal-close" id="techniqueClose" type="button" aria-label="Cerrar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+    <div class="technique-anim" id="techniqueAnim"></div>
+    <h3 class="technique-title" id="techniqueTitle"></h3>
+    <div class="technique-block">
+      <div class="technique-label">Cómo hacerlo</div>
+      <ul class="technique-list" id="techniqueSteps"></ul>
+    </div>
+    <div class="technique-block">
+      <div class="technique-label errores">Errores comunes</div>
+      <ul class="technique-list errores" id="techniqueMistakes"></ul>
+    </div>
+    <button class="btn-primary" id="techniqueCloseBtn" type="button">Cerrar</button>
+  </div>
+</div>
 
 <nav class="bottom" id="bottomNav">
   <button data-view="hoy" class="active">
@@ -356,10 +400,10 @@ async function renderExercises(){
       </div>
       ${item.notas ? `<div class="ex-notes">${item.notas}</div>` : ""}
       <div class="ex-links">
-        <a class="video-link" href="${videoUrl}" target="_blank" rel="noopener">
+        <button class="video-link" type="button" data-ex="${encodeURIComponent(item.ex)}" data-video="${videoUrl}">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
           Ver técnica
-        </a>
+        </button>
         <button class="muscle-toggle" type="button">
           Músculos trabajados
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
@@ -384,6 +428,18 @@ async function renderExercises(){
       const panel = btn.closest(".card").querySelector(".muscle-panel");
       panel.hidden = !panel.hidden;
       btn.classList.toggle("open", !panel.hidden);
+    });
+  });
+
+  $$(".video-link", list).forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const ex = decodeURIComponent(btn.dataset.ex);
+      const anim = TECHNIQUE_ANIMATIONS[ex];
+      if(anim){
+        openTechniqueModal(ex, anim);
+      } else {
+        window.open(btn.dataset.video, "_blank", "noopener");
+      }
     });
   });
 
@@ -523,6 +579,153 @@ function muscleDiagram(item){
   `;
 }
 
+/*
+ * Animaciones de técnica: cada ejercicio se asocia a su propio recurso
+ * (build + pasos + errores). Ilustración/animación propia (SVG + CSS,
+ * sin dependencias externas), no se usan GIFs ni video de terceros.
+ * Se genera de forma perezosa: solo al abrir el modal (ver openTechniqueModal).
+ */
+const TECHNIQUE_ANIMATIONS = {
+  "Sentadilla (back squat)": {
+    build: buildSquatAnim,
+    pasos: [
+      "Pies al ancho de hombros, pecho arriba, mirada al frente.",
+      "Baja flexionando cadera y rodillas a la vez, manteniendo la espalda neutra.",
+      "Desciende hasta donde tu movilidad lo permita sin perder la curva lumbar, luego empuja el piso para subir.",
+    ],
+    errores: [
+      "Rodillas colapsando hacia adentro al subir.",
+      "Redondear la espalda baja en el fondo del movimiento.",
+    ],
+  },
+  "Press banca (barra o mancuerna)": {
+    build: buildBenchPressAnim,
+    pasos: [
+      "Escápulas retraídas y pies firmes en el piso durante todo el movimiento.",
+      "Baja la barra de forma controlada hasta rozar el pecho, cerca de la línea del pezón.",
+      "Empuja en línea recta hacia arriba hasta extender los codos sin bloquear de golpe.",
+    ],
+    errores: [
+      "Rebotar la barra en el pecho.",
+      "Despegar los glúteos del banco para ganar impulso.",
+    ],
+  },
+  "Remo con barra": {
+    build: buildRowAnim,
+    pasos: [
+      "Cadera atrás, torso inclinado ~45°, espalda neutra durante toda la serie.",
+      "Tira la barra hacia el abdomen bajo llevando los codos hacia atrás.",
+      "Controla el descenso hasta extender completamente los brazos.",
+    ],
+    errores: [
+      "Usar impulso de la zona lumbar (\"tirón\" de cadera) en vez de tracción de espalda.",
+      "Encoger los hombros en vez de llevar los codos hacia atrás.",
+    ],
+  },
+};
+
+function buildSquatAnim(){
+  return `
+    <svg viewBox="0 0 200 200">
+      <style>
+        .sq-torso{transform-origin:100px 108px; animation:sqTorso 2.6s ease-in-out infinite;}
+        .sq-thigh{transform-origin:100px 108px; animation:sqThigh 2.6s ease-in-out infinite;}
+        .sq-shin{transform-origin:100px 150px; animation:sqShin 2.6s ease-in-out infinite;}
+        @keyframes sqTorso{0%,100%{transform:rotate(0deg);}45%,55%{transform:rotate(32deg);}}
+        @keyframes sqThigh{0%,100%{transform:rotate(0deg);}45%,55%{transform:rotate(-38deg);}}
+        @keyframes sqShin{0%,100%{transform:rotate(0deg);}45%,55%{transform:rotate(30deg);}}
+      </style>
+      <line x1="65" y1="187" x2="152" y2="187" stroke="#3A3D42" stroke-width="4" stroke-linecap="round"/>
+      <g class="sq-thigh">
+        <line x1="100" y1="108" x2="100" y2="150" stroke="#E7E9EC" stroke-width="11" stroke-linecap="round"/>
+        <g class="sq-shin">
+          <line x1="100" y1="150" x2="100" y2="187" stroke="#E7E9EC" stroke-width="10" stroke-linecap="round"/>
+          <line x1="100" y1="187" x2="124" y2="187" stroke="#E7E9EC" stroke-width="9" stroke-linecap="round"/>
+          <circle cx="100" cy="150" r="4.5" fill="#E8783C"/>
+        </g>
+      </g>
+      <g class="sq-torso">
+        <line x1="100" y1="108" x2="100" y2="68" stroke="#E7E9EC" stroke-width="14" stroke-linecap="round"/>
+        <line x1="100" y1="80" x2="86" y2="96" stroke="#E7E9EC" stroke-width="7" stroke-linecap="round"/>
+        <line x1="86" y1="96" x2="98" y2="72" stroke="#E7E9EC" stroke-width="7" stroke-linecap="round"/>
+        <rect x="78" y="63" width="42" height="6" rx="3" fill="#6FA8E0"/>
+        <circle cx="100" cy="55" r="11" fill="#E7E9EC"/>
+        <circle cx="100" cy="108" r="4.5" fill="#E8783C"/>
+      </g>
+    </svg>`;
+}
+
+function buildBenchPressAnim(){
+  return `
+    <svg viewBox="0 0 200 200">
+      <style>
+        .pb-upperarm{transform-origin:80px 138px; animation:pbUpper 2.6s ease-in-out infinite;}
+        .pb-forearm{transform-origin:62px 148px; animation:pbFore 2.6s ease-in-out infinite;}
+        @keyframes pbUpper{0%,100%{transform:rotate(0deg);}45%,55%{transform:rotate(119deg);}}
+        @keyframes pbFore{0%,100%{transform:rotate(0deg);}45%,55%{transform:rotate(-158deg);}}
+      </style>
+      <rect x="45" y="142" width="110" height="8" rx="2" fill="#3A3D42"/>
+      <line x1="55" y1="150" x2="55" y2="185" stroke="#3A3D42" stroke-width="4"/>
+      <line x1="140" y1="150" x2="140" y2="185" stroke="#3A3D42" stroke-width="4"/>
+      <line x1="118" y1="138" x2="140" y2="152" stroke="#E7E9EC" stroke-width="10" stroke-linecap="round"/>
+      <line x1="140" y1="152" x2="140" y2="183" stroke="#E7E9EC" stroke-width="9" stroke-linecap="round"/>
+      <line x1="140" y1="183" x2="156" y2="183" stroke="#E7E9EC" stroke-width="8" stroke-linecap="round"/>
+      <line x1="68" y1="138" x2="118" y2="138" stroke="#E7E9EC" stroke-width="14" stroke-linecap="round"/>
+      <circle cx="55" cy="131" r="11" fill="#E7E9EC"/>
+      <circle cx="80" cy="138" r="4.5" fill="#E8783C"/>
+      <g class="pb-upperarm">
+        <line x1="80" y1="138" x2="62" y2="148" stroke="#E7E9EC" stroke-width="9" stroke-linecap="round"/>
+        <g class="pb-forearm">
+          <line x1="62" y1="148" x2="78" y2="128" stroke="#E7E9EC" stroke-width="8" stroke-linecap="round"/>
+          <rect x="68" y="120" width="26" height="6" rx="3" fill="#6FA8E0"/>
+          <circle cx="62" cy="148" r="4" fill="#E8783C"/>
+        </g>
+      </g>
+    </svg>`;
+}
+
+function buildRowAnim(){
+  return `
+    <svg viewBox="0 0 200 200">
+      <style>
+        .rw-upperarm{transform-origin:95px 90px; animation:rwUpper 2.6s ease-in-out infinite;}
+        .rw-forearm{transform-origin:100px 130px; animation:rwFore 2.6s ease-in-out infinite;}
+        @keyframes rwUpper{0%,100%{transform:rotate(0deg);}45%,55%{transform:rotate(-61deg);}}
+        @keyframes rwFore{0%,100%{transform:rotate(0deg);}45%,55%{transform:rotate(33deg);}}
+      </style>
+      <line x1="65" y1="187" x2="175" y2="187" stroke="#3A3D42" stroke-width="4" stroke-linecap="round"/>
+      <line x1="150" y1="140" x2="153" y2="160" stroke="#E7E9EC" stroke-width="10" stroke-linecap="round"/>
+      <line x1="153" y1="160" x2="153" y2="185" stroke="#E7E9EC" stroke-width="9" stroke-linecap="round"/>
+      <line x1="153" y1="185" x2="170" y2="185" stroke="#E7E9EC" stroke-width="8" stroke-linecap="round"/>
+      <line x1="150" y1="140" x2="95" y2="90" stroke="#E7E9EC" stroke-width="13" stroke-linecap="round"/>
+      <circle cx="85" cy="78" r="11" fill="#E7E9EC"/>
+      <circle cx="95" cy="90" r="4.5" fill="#E8783C"/>
+      <g class="rw-upperarm">
+        <line x1="95" y1="90" x2="100" y2="130" stroke="#E7E9EC" stroke-width="9" stroke-linecap="round"/>
+        <g class="rw-forearm">
+          <line x1="100" y1="130" x2="112" y2="158" stroke="#E7E9EC" stroke-width="8" stroke-linecap="round"/>
+          <rect x="105" y="153" width="26" height="6" rx="3" fill="#6FA8E0" transform="rotate(20 118 156)"/>
+          <circle cx="100" cy="130" r="4" fill="#E8783C"/>
+        </g>
+      </g>
+    </svg>`;
+}
+
+function openTechniqueModal(name, anim){
+  $("#techniqueTitle").textContent = name;
+  $("#techniqueAnim").innerHTML = anim.build();
+  $("#techniqueSteps").innerHTML = anim.pasos.map(p => `<li>${p}</li>`).join("");
+  $("#techniqueMistakes").innerHTML = anim.errores.map(e => `<li>${e}</li>`).join("");
+  $("#techniqueModal").hidden = false;
+  document.body.style.overflow = "hidden";
+}
+
+function closeTechniqueModal(){
+  $("#techniqueModal").hidden = true;
+  document.body.style.overflow = "";
+  $("#techniqueAnim").innerHTML = "";
+}
+
 function renderVolumen(){
   const tbody = $("#volumenBody");
   tbody.innerHTML = VOLUMEN.map(v => `
@@ -603,6 +806,15 @@ $("#bottomNav").addEventListener("click", e=>{
 });
 
 $("#historyExercise").addEventListener("change", renderHistory);
+
+$("#techniqueClose").addEventListener("click", closeTechniqueModal);
+$("#techniqueCloseBtn").addEventListener("click", closeTechniqueModal);
+$("#techniqueModal").addEventListener("click", e=>{
+  if(e.target.id === "techniqueModal") closeTechniqueModal();
+});
+document.addEventListener("keydown", e=>{
+  if(e.key === "Escape" && !$("#techniqueModal").hidden) closeTechniqueModal();
+});
 
 $("#saveApiUrl").addEventListener("click", ()=>{
   apiUrl = $("#apiUrlInput").value.trim();
