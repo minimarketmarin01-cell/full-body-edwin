@@ -256,24 +256,27 @@ function renderTabs(){
   });
 }
 
+let exRenderToken = 0;
+
 async function renderExercises(){
+  const token = ++exRenderToken;
   const list = $("#exList");
-  list.innerHTML = "";
   const day = PROGRAM[currentSession];
   let todaysLogs = {};
   try{
     const logs = await api(`/api/logs?date=${todayISO()}`);
     logs.forEach(l => { todaysLogs[l.exercise + "_" + l.set_number] = l; });
   }catch(e){ /* sin conexión configurada aún */ }
+  if(token !== exRenderToken) return;
 
+  const cardsHtml = [];
   for(const item of day){
-    const card = document.createElement("div");
-    card.className = "card";
     let lastHint = {};
     try{
       const last = await api(`/api/last?exercise=${encodeURIComponent(item.ex)}`);
       last.forEach(r => { lastHint[r.set_number] = r; });
     }catch(e){}
+    if(token !== exRenderToken) return;
 
     let setsHtml = "";
     for(let n=1; n<=item.series; n++){
@@ -290,7 +293,7 @@ async function renderExercises(){
         </div>`;
     }
 
-    card.innerHTML = `
+    cardsHtml.push(`
       <div class="ex-head">
         <div>
           <div class="ex-name">${item.ex}</div>
@@ -300,9 +303,17 @@ async function renderExercises(){
       </div>
       ${item.notas ? `<div class="ex-notes">${item.notas}</div>` : ""}
       <div class="sets">${setsHtml}</div>
-    `;
-    list.appendChild(card);
+    `);
   }
+
+  if(token !== exRenderToken) return;
+  list.innerHTML = "";
+  cardsHtml.forEach(html => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = html;
+    list.appendChild(card);
+  });
 
   $$(".set-btn", list).forEach(btn=>{
     btn.addEventListener("click", async ()=>{
