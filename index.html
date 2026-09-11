@@ -890,7 +890,8 @@ function closeTechniqueModal(){
 
 let restTimerInterval = null;
 let restTimerTotal = 0;
-let restTimerRemaining = 0;
+let restTimerEndAt = 0;
+let restTimerDone = false;
 
 function formatClock(sec){
   const m = Math.floor(sec / 60);
@@ -898,34 +899,44 @@ function formatClock(sec){
   return `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
 }
 
-function updateRestTimerUI(){
-  $("#restTimerClock").textContent = formatClock(Math.max(restTimerRemaining, 0));
-  const pct = restTimerTotal ? Math.max(restTimerRemaining, 0) / restTimerTotal * 100 : 0;
+function restTimerRemainingNow(){
+  return Math.round((restTimerEndAt - Date.now()) / 1000);
+}
+
+function tickRestTimer(){
+  const remaining = restTimerRemainingNow();
+  $("#restTimerClock").textContent = formatClock(Math.max(remaining, 0));
+  const pct = restTimerTotal ? Math.max(remaining, 0) / restTimerTotal * 100 : 0;
   $("#restTimerFill").style.width = pct + "%";
+  if(remaining <= 0 && !restTimerDone){
+    restTimerDone = true;
+    clearInterval(restTimerInterval);
+    if(navigator.vibrate) navigator.vibrate([200,100,200]);
+    toast("Descanso terminado");
+    setTimeout(()=>{ $("#restTimer").hidden = true; }, 1500);
+  }
 }
 
 function startRestTimer(seconds){
   clearInterval(restTimerInterval);
   restTimerTotal = seconds;
-  restTimerRemaining = seconds;
+  restTimerEndAt = Date.now() + seconds * 1000;
+  restTimerDone = false;
   $("#restTimer").hidden = false;
-  updateRestTimerUI();
-  restTimerInterval = setInterval(()=>{
-    restTimerRemaining--;
-    updateRestTimerUI();
-    if(restTimerRemaining <= 0){
-      clearInterval(restTimerInterval);
-      if(navigator.vibrate) navigator.vibrate([200,100,200]);
-      toast("Descanso terminado");
-      setTimeout(()=>{ $("#restTimer").hidden = true; }, 1500);
-    }
-  }, 1000);
+  tickRestTimer();
+  restTimerInterval = setInterval(tickRestTimer, 1000);
 }
 
 function stopRestTimer(){
   clearInterval(restTimerInterval);
   $("#restTimer").hidden = true;
 }
+
+document.addEventListener("visibilitychange", ()=>{
+  if(document.visibilityState === "visible" && !$("#restTimer").hidden){
+    tickRestTimer();
+  }
+});
 
 function renderVolumen(){
   const tbody = $("#volumenBody");
@@ -1018,9 +1029,9 @@ document.addEventListener("keydown", e=>{
 });
 
 $("#restTimerAdd").addEventListener("click", ()=>{
-  restTimerRemaining += 15;
+  restTimerEndAt += 15000;
   restTimerTotal += 15;
-  updateRestTimerUI();
+  tickRestTimer();
 });
 $("#restTimerSkip").addEventListener("click", stopRestTimer);
 
