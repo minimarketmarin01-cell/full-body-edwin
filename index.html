@@ -179,6 +179,24 @@ th{color:var(--muted); font-weight:600; font-size:12px;}
 .technique-label.errores{color:#B5482F;}
 .technique-list{margin:0; padding-left:18px; display:flex; flex-direction:column; gap:5px;}
 .technique-list li{font-size:13.5px; color:var(--ink); line-height:1.4;}
+.rest-timer{
+  position:fixed; left:12px; right:12px; bottom:calc(64px + env(safe-area-inset-bottom));
+  background:var(--ink); color:var(--bg); border-radius:16px; padding:10px 14px;
+  z-index:40; box-shadow:0 8px 24px rgba(0,0,0,.25); overflow:hidden;
+}
+.rest-timer[hidden]{display:none;}
+.rest-timer-info{display:flex; align-items:baseline; justify-content:space-between;}
+.rest-timer-label{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; opacity:.7;}
+.rest-timer-clock{font-family:"JetBrains Mono",monospace; font-size:22px; font-weight:700;}
+.rest-timer-actions{display:flex; gap:8px; margin-top:6px;}
+.rest-timer-actions button{
+  flex:1; background:rgba(255,255,255,.14); color:var(--bg); border:none; border-radius:9px;
+  padding:8px 0; font-family:Inter; font-weight:600; font-size:13px; cursor:pointer;
+}
+.rest-timer-bar{
+  position:absolute; left:0; right:0; bottom:0; height:3px; background:rgba(255,255,255,.12);
+}
+.rest-timer-fill{height:100%; background:var(--accent); width:100%;}
 nav.bottom{
   position:fixed; bottom:0; left:0; right:0; background:var(--card);
   border-top:1px solid var(--line); display:flex; padding:6px 4px calc(6px + env(safe-area-inset-bottom));
@@ -247,6 +265,18 @@ nav.bottom svg{width:20px; height:20px;}
 
 <div class="toast" id="toast"></div>
 
+<div class="rest-timer" id="restTimer" hidden>
+  <div class="rest-timer-info">
+    <div class="rest-timer-label">Descanso</div>
+    <div class="rest-timer-clock" id="restTimerClock">00:00</div>
+  </div>
+  <div class="rest-timer-actions">
+    <button type="button" id="restTimerAdd">+15s</button>
+    <button type="button" id="restTimerSkip">Saltar</button>
+  </div>
+  <div class="rest-timer-bar"><div class="rest-timer-fill" id="restTimerFill"></div></div>
+</div>
+
 <div class="modal-overlay" id="techniqueModal" hidden>
   <div class="modal-panel">
     <button class="modal-close" id="techniqueClose" type="button" aria-label="Cerrar">
@@ -288,28 +318,28 @@ nav.bottom svg{width:20px; height:20px;}
 <script>
 const PROGRAM = {
   A: [
-    {ex:"Sentadilla (back squat)", grupo:"Cuádriceps", series:3, reps:"8-10", rir:"2", notas:"Técnica primero; profundidad completa cómoda", sec:["Glúteo","Isquiotibiales","Core"]},
-    {ex:"Press banca (barra o mancuerna)", grupo:"Pecho", series:3, reps:"8-10", rir:"2", sec:["Tríceps","Hombro"]},
-    {ex:"Remo con barra", grupo:"Espalda", series:3, reps:"10-12", rir:"2", sec:["Bíceps"]},
-    {ex:"Press militar mancuerna", grupo:"Hombro", series:3, reps:"10-12", rir:"2", sec:["Tríceps","Core"]},
-    {ex:"Curl femoral tumbado", grupo:"Isquiotibiales", series:3, reps:"12-15", rir:"1.5", sec:["Glúteo"]},
-    {ex:"Curl bíceps con barra o mancuerna", grupo:"Bíceps", series:2, reps:"12-15", rir:"1", sec:[]},
+    {ex:"Sentadilla (back squat)", grupo:"Cuádriceps", series:3, reps:"8-10", rir:"2", notas:"Técnica primero; profundidad completa cómoda", sec:["Glúteo","Isquiotibiales","Core"], descanso:150},
+    {ex:"Press banca (barra o mancuerna)", grupo:"Pecho", series:3, reps:"8-10", rir:"2", sec:["Tríceps","Hombro"], descanso:150},
+    {ex:"Remo con barra", grupo:"Espalda", series:3, reps:"10-12", rir:"2", sec:["Bíceps"], descanso:120},
+    {ex:"Press militar mancuerna", grupo:"Hombro", series:3, reps:"10-12", rir:"2", sec:["Tríceps","Core"], descanso:120},
+    {ex:"Curl femoral tumbado", grupo:"Isquiotibiales", series:3, reps:"12-15", rir:"1.5", sec:["Glúteo"], descanso:75},
+    {ex:"Curl bíceps con barra o mancuerna", grupo:"Bíceps", series:2, reps:"12-15", rir:"1", sec:[], descanso:75},
   ],
   B: [
-    {ex:"Peso muerto rumano", grupo:"Isquiotibiales", series:3, reps:"8-10", rir:"2", notas:"Rango sin perder la curva lumbar neutra", sec:["Glúteo","Espalda"]},
-    {ex:"Press inclinado mancuerna", grupo:"Pecho", series:3, reps:"10-12", rir:"2", sec:["Hombro","Tríceps"]},
-    {ex:"Jalón al pecho", grupo:"Espalda", series:3, reps:"10-12", rir:"2", sec:["Bíceps"]},
-    {ex:"Elevaciones laterales", grupo:"Hombro", series:3, reps:"15-20", rir:"1", sec:[]},
-    {ex:"Extensión de cuádriceps", grupo:"Cuádriceps", series:3, reps:"12-15", rir:"1.5", sec:[]},
-    {ex:"Tríceps en polea", grupo:"Tríceps", series:3, reps:"12-15", rir:"1", sec:[]},
+    {ex:"Peso muerto rumano", grupo:"Isquiotibiales", series:3, reps:"8-10", rir:"2", notas:"Rango sin perder la curva lumbar neutra", sec:["Glúteo","Espalda"], descanso:150},
+    {ex:"Press inclinado mancuerna", grupo:"Pecho", series:3, reps:"10-12", rir:"2", sec:["Hombro","Tríceps"], descanso:120},
+    {ex:"Jalón al pecho", grupo:"Espalda", series:3, reps:"10-12", rir:"2", sec:["Bíceps"], descanso:120},
+    {ex:"Elevaciones laterales", grupo:"Hombro", series:3, reps:"15-20", rir:"1", sec:[], descanso:60},
+    {ex:"Extensión de cuádriceps", grupo:"Cuádriceps", series:3, reps:"12-15", rir:"1.5", sec:[], descanso:75},
+    {ex:"Tríceps en polea", grupo:"Tríceps", series:3, reps:"12-15", rir:"1", sec:[], descanso:60},
   ],
   C: [
-    {ex:"Prensa de piernas", grupo:"Cuádriceps", series:3, reps:"10-12", rir:"2", sec:["Glúteo"]},
-    {ex:"Remo unilateral mancuerna", grupo:"Espalda", series:3, reps:"10-12", rir:"2", sec:["Bíceps"]},
-    {ex:"Press militar barra", grupo:"Hombro", series:3, reps:"8-10", rir:"2", sec:["Tríceps"]},
-    {ex:"Hip thrust", grupo:"Glúteo", series:3, reps:"10-12", rir:"2", sec:["Isquiotibiales"]},
-    {ex:"Face pull", grupo:"Hombro", series:3, reps:"15", rir:"1", notas:"Deltoide posterior / salud de hombro", view:"back", sec:["Espalda"]},
-    {ex:"Plancha / core", grupo:"Core", series:3, reps:"30-45s", rir:"—", notas:"Series por tiempo", sec:[]},
+    {ex:"Prensa de piernas", grupo:"Cuádriceps", series:3, reps:"10-12", rir:"2", sec:["Glúteo"], descanso:120},
+    {ex:"Remo unilateral mancuerna", grupo:"Espalda", series:3, reps:"10-12", rir:"2", sec:["Bíceps"], descanso:120},
+    {ex:"Press militar barra", grupo:"Hombro", series:3, reps:"8-10", rir:"2", sec:["Tríceps"], descanso:150},
+    {ex:"Hip thrust", grupo:"Glúteo", series:3, reps:"10-12", rir:"2", sec:["Isquiotibiales"], descanso:120},
+    {ex:"Face pull", grupo:"Hombro", series:3, reps:"15", rir:"1", notas:"Deltoide posterior / salud de hombro", view:"back", sec:["Espalda"], descanso:60},
+    {ex:"Plancha / core", grupo:"Core", series:3, reps:"30-45s", rir:"—", notas:"Series por tiempo", sec:[], descanso:60},
   ],
 };
 
@@ -478,6 +508,8 @@ async function renderExercises(){
         btn.classList.add("done");
         btn.textContent = "✓";
         toast("Serie guardada");
+        const item = PROGRAM[currentSession].find(i => i.ex === ex);
+        if(item?.descanso) startRestTimer(item.descanso);
       }catch(e){
         toast("No se pudo guardar. Revisa Ajustes.");
       }
@@ -856,6 +888,45 @@ function closeTechniqueModal(){
   $("#techniqueAnim").innerHTML = "";
 }
 
+let restTimerInterval = null;
+let restTimerTotal = 0;
+let restTimerRemaining = 0;
+
+function formatClock(sec){
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+}
+
+function updateRestTimerUI(){
+  $("#restTimerClock").textContent = formatClock(Math.max(restTimerRemaining, 0));
+  const pct = restTimerTotal ? Math.max(restTimerRemaining, 0) / restTimerTotal * 100 : 0;
+  $("#restTimerFill").style.width = pct + "%";
+}
+
+function startRestTimer(seconds){
+  clearInterval(restTimerInterval);
+  restTimerTotal = seconds;
+  restTimerRemaining = seconds;
+  $("#restTimer").hidden = false;
+  updateRestTimerUI();
+  restTimerInterval = setInterval(()=>{
+    restTimerRemaining--;
+    updateRestTimerUI();
+    if(restTimerRemaining <= 0){
+      clearInterval(restTimerInterval);
+      if(navigator.vibrate) navigator.vibrate([200,100,200]);
+      toast("Descanso terminado");
+      setTimeout(()=>{ $("#restTimer").hidden = true; }, 1500);
+    }
+  }, 1000);
+}
+
+function stopRestTimer(){
+  clearInterval(restTimerInterval);
+  $("#restTimer").hidden = true;
+}
+
 function renderVolumen(){
   const tbody = $("#volumenBody");
   tbody.innerHTML = VOLUMEN.map(v => `
@@ -945,6 +1016,13 @@ $("#techniqueModal").addEventListener("click", e=>{
 document.addEventListener("keydown", e=>{
   if(e.key === "Escape" && !$("#techniqueModal").hidden) closeTechniqueModal();
 });
+
+$("#restTimerAdd").addEventListener("click", ()=>{
+  restTimerRemaining += 15;
+  restTimerTotal += 15;
+  updateRestTimerUI();
+});
+$("#restTimerSkip").addEventListener("click", stopRestTimer);
 
 $("#testApiUrl").addEventListener("click", async ()=>{
   const status = $("#apiStatus");
