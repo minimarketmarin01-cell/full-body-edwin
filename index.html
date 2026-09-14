@@ -105,6 +105,7 @@ main{padding:14px 16px 24px;}
 .set-row{display:grid; grid-template-columns:28px 1fr 1fr 52px; gap:8px; align-items:center;}
 .set-row .n{font-size:13px; color:var(--muted); font-weight:600;}
 .field-unit{position:relative;}
+.field-unit.span2{grid-column:span 2;}
 .set-row input{
   width:100%; border:1px solid var(--line); background:var(--bg); color:var(--ink);
   border-radius:9px; padding:9px 30px 9px 8px; font-size:15px; text-align:center;
@@ -359,7 +360,7 @@ const PROGRAM = {
     {ex:"Press militar barra", grupo:"Hombro", series:3, reps:"8-10", rir:"2", sec:["Tríceps"], descanso:150},
     {ex:"Hip thrust", grupo:"Glúteo", series:3, reps:"10-12", rir:"2", sec:["Isquiotibiales"], descanso:120},
     {ex:"Face pull", grupo:"Hombro", series:3, reps:"15", rir:"1", notas:"Deltoide posterior / salud de hombro", view:"back", sec:["Espalda"], descanso:60},
-    {ex:"Plancha / core", grupo:"Core", series:3, reps:"30-45s", rir:"—", notas:"Series por tiempo", sec:[], descanso:60},
+    {ex:"Plancha / core", grupo:"Core", series:3, reps:"30-45s", rir:"—", notas:"Series por tiempo", sec:[], descanso:60, timed:true},
   ],
 };
 
@@ -460,7 +461,15 @@ async function renderExercises(){
       const hint = lastHint[n];
       const wPlaceholder = hint?.weight ?? "";
       const rPlaceholder = hint?.reps ?? "";
-      setsHtml += `
+      setsHtml += item.timed ? `
+        <div class="set-row timed ${saved ? "done" : ""}" data-ex="${encodeURIComponent(item.ex)}" data-n="${n}">
+          <div class="n">${n}</div>
+          <div class="field-unit span2">
+            <input type="number" inputmode="numeric" class="t-input" placeholder="${rPlaceholder}" value="${saved?.reps ?? ""}">
+            <span class="unit-label">seg</span>
+          </div>
+          <button class="set-btn ${saved ? "done" : ""}">${saved ? "✓" : "Ok"}</button>
+        </div>` : `
         <div class="set-row ${saved ? "done" : ""}" data-ex="${encodeURIComponent(item.ex)}" data-n="${n}">
           <div class="n">${n}</div>
           <div class="field-unit">
@@ -481,7 +490,7 @@ async function renderExercises(){
       <div class="ex-head">
         <div>
           <div class="ex-name">${item.ex}</div>
-          <div class="ex-target">${item.series} series · ${item.reps} reps · RIR ${item.rir}</div>
+          <div class="ex-target">${item.series} series · ${item.reps}${item.timed ? "" : " reps"} · RIR ${item.rir}</div>
         </div>
         <div class="ex-badge-wrap">
           ${muscleIcon(item.grupo)}
@@ -540,9 +549,13 @@ async function renderExercises(){
       const row = btn.closest(".set-row");
       const ex = decodeURIComponent(row.dataset.ex);
       const n = Number(row.dataset.n);
-      const weight = parseFloat($(".w-input", row).value) || null;
-      const reps = parseInt($(".r-input", row).value) || null;
-      if(weight === null && reps === null){ toast("Ingresa peso o reps"); return; }
+      const isTimed = row.classList.contains("timed");
+      const weight = isTimed ? null : (parseFloat($(".w-input", row).value) || null);
+      const reps = isTimed ? (parseInt($(".t-input", row).value) || null) : (parseInt($(".r-input", row).value) || null);
+      if(isTimed ? reps === null : (weight === null && reps === null)){
+        toast(isTimed ? "Ingresa los segundos" : "Ingresa peso o reps");
+        return;
+      }
       try{
         await api("/api/logs", {method:"POST", body: JSON.stringify({
           date: todayISO(), session: currentSession, exercise: ex, set_number: n, weight, reps, rir: null
