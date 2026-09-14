@@ -111,6 +111,9 @@ main{padding:14px 16px 24px;}
 .timer-btn svg{width:16px; height:16px;}
 .timer-btn.running{background:var(--ok-bg); color:var(--ok);}
 .set-row .n{font-size:13px; color:var(--muted); font-weight:600;}
+.set-row.uni-row{grid-template-columns:38px 1fr 1fr 52px;}
+.n.uni{display:flex; flex-direction:column; line-height:1.1;}
+.n.uni small{font-size:9px; text-transform:uppercase; letter-spacing:.02em; font-weight:700; opacity:.8;}
 .field-unit{position:relative;}
 .set-row input{
   width:100%; border:1px solid var(--line); background:var(--bg); color:var(--ink);
@@ -362,7 +365,7 @@ const PROGRAM = {
   ],
   C: [
     {ex:"Prensa de piernas", grupo:"Cuádriceps", series:3, reps:"10-12", rir:"2", sec:["Glúteo"], descanso:120},
-    {ex:"Remo unilateral mancuerna", grupo:"Espalda", series:3, reps:"10-12", rir:"2", sec:["Bíceps"], descanso:120},
+    {ex:"Remo unilateral mancuerna", grupo:"Espalda", series:3, reps:"10-12", rir:"2", notas:"Cada brazo se registra por separado", sec:["Bíceps"], descanso:120, unilateral:true},
     {ex:"Press militar barra", grupo:"Hombro", series:3, reps:"8-10", rir:"2", sec:["Tríceps"], descanso:150},
     {ex:"Hip thrust", grupo:"Glúteo", series:3, reps:"10-12", rir:"2", sec:["Isquiotibiales"], descanso:120},
     {ex:"Face pull", grupo:"Hombro", series:3, reps:"15", rir:"1", notas:"Deltoide posterior / salud de hombro", view:"back", sec:["Espalda"], descanso:60},
@@ -487,15 +490,29 @@ async function renderExercises(){
       lastRes.value.forEach(r => { lastHint[r.set_number] = r; });
     }
 
+    const slots = [];
+    if(item.unilateral){
+      for(let n=1; n<=item.series; n++){
+        slots.push({setNumber:(n-1)*2+1, label:n, side:"Izq"});
+        slots.push({setNumber:(n-1)*2+2, label:n, side:"Der"});
+      }
+    } else {
+      for(let n=1; n<=item.series; n++) slots.push({setNumber:n, label:n, side:null});
+    }
+
     let setsHtml = "";
-    for(let n=1; n<=item.series; n++){
-      const saved = todaysLogs[item.ex + "_" + n];
-      const hint = lastHint[n];
+    for(const slot of slots){
+      const setNumber = slot.setNumber;
+      const saved = todaysLogs[item.ex + "_" + setNumber];
+      const hint = lastHint[setNumber];
       const wPlaceholder = hint?.weight ?? "";
       const rPlaceholder = hint?.reps ?? "";
+      const nCell = slot.side
+        ? `<div class="n uni"><span>${slot.label}</span><small>${slot.side}</small></div>`
+        : `<div class="n">${slot.label}</div>`;
       setsHtml += item.timed ? `
-        <div class="set-row timed ${saved ? "done" : ""}" data-ex="${encodeURIComponent(item.ex)}" data-n="${n}">
-          <div class="n">${n}</div>
+        <div class="set-row timed ${saved ? "done" : ""}" data-ex="${encodeURIComponent(item.ex)}" data-n="${setNumber}">
+          ${nCell}
           <button class="timer-btn" type="button" aria-label="Cronómetro">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
           </button>
@@ -505,8 +522,8 @@ async function renderExercises(){
           </div>
           <button class="set-btn ${saved ? "done" : ""}">${saved ? "✓" : "Ok"}</button>
         </div>` : `
-        <div class="set-row ${saved ? "done" : ""}" data-ex="${encodeURIComponent(item.ex)}" data-n="${n}">
-          <div class="n">${n}</div>
+        <div class="set-row ${item.unilateral ? "uni-row" : ""} ${saved ? "done" : ""}" data-ex="${encodeURIComponent(item.ex)}" data-n="${setNumber}">
+          ${nCell}
           <div class="field-unit">
             <input type="number" inputmode="decimal" class="w-input" placeholder="${wPlaceholder}" value="${saved?.weight ?? ""}">
             <span class="unit-label">kg</span>
