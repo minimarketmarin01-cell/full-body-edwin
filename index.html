@@ -111,6 +111,8 @@ main{padding:14px 16px 24px;}
   font-family:Inter;
 }
 .set-row input::placeholder{color:var(--muted); opacity:.7;}
+.set-row.done input{background:var(--ok-bg); border-color:var(--ok-bg); color:var(--ok);}
+.set-row.done .unit-label{color:var(--ok); opacity:.85;}
 .unit-label{
   position:absolute; right:9px; top:50%; transform:translateY(-50%);
   font-size:10.5px; font-weight:700; color:var(--muted); pointer-events:none;
@@ -145,6 +147,19 @@ th{color:var(--muted); font-weight:600; font-size:12px;}
   z-index:50;
 }
 .toast.show{opacity:1;}
+.celebration{
+  position:fixed; top:calc(14px + env(safe-area-inset-top)); left:14px; right:14px; z-index:55;
+  background:var(--ok); color:#fff; border-radius:14px; padding:14px 16px;
+  display:flex; align-items:center; gap:10px; box-shadow:0 8px 24px rgba(0,0,0,.22);
+  animation:celebrationIn .3s ease-out;
+}
+.celebration[hidden]{display:none;}
+.celebration-icon{
+  width:26px; height:26px; border-radius:50%; background:rgba(255,255,255,.25);
+  display:flex; align-items:center; justify-content:center; font-weight:800; flex-shrink:0;
+}
+.celebration-text{font-weight:700; font-size:14px;}
+@keyframes celebrationIn{from{opacity:0; transform:translateY(-14px);} to{opacity:1; transform:translateY(0);}}
 .modal-overlay{
   position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:60;
   display:flex; align-items:flex-end; justify-content:center;
@@ -264,6 +279,11 @@ nav.bottom svg{width:20px; height:20px;}
 </main>
 
 <div class="toast" id="toast"></div>
+
+<div class="celebration" id="celebration" hidden>
+  <div class="celebration-icon">✓</div>
+  <div class="celebration-text" id="celebrationText"></div>
+</div>
 
 <div class="rest-timer" id="restTimer" hidden>
   <div class="rest-timer-info">
@@ -391,6 +411,25 @@ function renderTabs(){
 }
 
 let exRenderToken = 0;
+let sessionCelebrated = false;
+
+function checkSessionComplete(list){
+  const btns = $$(".set-btn", list);
+  const done = btns.filter(b => b.classList.contains("done")).length;
+  if(btns.length > 0 && done === btns.length && !sessionCelebrated){
+    sessionCelebrated = true;
+    celebrateSessionComplete();
+  }
+}
+
+function celebrateSessionComplete(){
+  const el = $("#celebration");
+  $("#celebrationText").textContent = `Sesión ${currentSession} completa. Buen entrenamiento.`;
+  el.hidden = false;
+  if(navigator.vibrate) navigator.vibrate([100,60,100,60,200]);
+  clearTimeout(el._hideTimeout);
+  el._hideTimeout = setTimeout(()=>{ el.hidden = true; }, 4000);
+}
 
 async function renderExercises(){
   const token = ++exRenderToken;
@@ -422,7 +461,7 @@ async function renderExercises(){
       const wPlaceholder = hint?.weight ?? "";
       const rPlaceholder = hint?.reps ?? "";
       setsHtml += `
-        <div class="set-row" data-ex="${encodeURIComponent(item.ex)}" data-n="${n}">
+        <div class="set-row ${saved ? "done" : ""}" data-ex="${encodeURIComponent(item.ex)}" data-n="${n}">
           <div class="n">${n}</div>
           <div class="field-unit">
             <input type="number" inputmode="decimal" class="w-input" placeholder="${wPlaceholder}" value="${saved?.weight ?? ""}">
@@ -473,6 +512,9 @@ async function renderExercises(){
     list.appendChild(card);
   });
 
+  const allBtns = $$(".set-btn", list);
+  sessionCelebrated = allBtns.length > 0 && allBtns.every(b => b.classList.contains("done"));
+
   $$(".muscle-toggle", list).forEach(btn=>{
     btn.addEventListener("click", ()=>{
       const panel = btn.closest(".card").querySelector(".muscle-panel");
@@ -507,9 +549,11 @@ async function renderExercises(){
         })});
         btn.classList.add("done");
         btn.textContent = "✓";
+        row.classList.add("done");
         toast("Serie guardada");
         const item = PROGRAM[currentSession].find(i => i.ex === ex);
         if(item?.descanso) startRestTimer(item.descanso);
+        checkSessionComplete(list);
       }catch(e){
         toast("No se pudo guardar. Revisa Ajustes.");
       }
