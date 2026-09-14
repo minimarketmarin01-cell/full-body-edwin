@@ -103,9 +103,15 @@ main{padding:14px 16px 24px;}
 .muscle-legend li.secondary::before{background:var(--muscle-secondary);}
 .sets{margin-top:10px; display:flex; flex-direction:column; gap:6px;}
 .set-row{display:grid; grid-template-columns:28px 1fr 1fr 52px; gap:8px; align-items:center;}
+.set-row.timed{grid-template-columns:28px 40px 1fr 52px;}
+.timer-btn{
+  height:100%; min-height:38px; border:none; border-radius:9px; background:var(--chip-bg);
+  color:var(--muted); display:flex; align-items:center; justify-content:center; cursor:pointer;
+}
+.timer-btn svg{width:16px; height:16px;}
+.timer-btn.running{background:var(--ok-bg); color:var(--ok);}
 .set-row .n{font-size:13px; color:var(--muted); font-weight:600;}
 .field-unit{position:relative;}
-.field-unit.span2{grid-column:span 2;}
 .set-row input{
   width:100%; border:1px solid var(--line); background:var(--bg); color:var(--ink);
   border-radius:9px; padding:9px 30px 9px 8px; font-size:15px; text-align:center;
@@ -413,6 +419,29 @@ function renderTabs(){
 
 let exRenderToken = 0;
 let sessionCelebrated = false;
+const plankTimers = new Map();
+
+function toggleSetStopwatch(btn){
+  const row = btn.closest(".set-row");
+  const input = $(".t-input", row);
+  if(plankTimers.has(row)){
+    clearInterval(plankTimers.get(row));
+    plankTimers.delete(row);
+    btn.classList.remove("running");
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`;
+    input.readOnly = false;
+    return;
+  }
+  const startedAt = Date.now();
+  input.value = "0";
+  input.readOnly = true;
+  btn.classList.add("running");
+  btn.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg>`;
+  const id = setInterval(()=>{
+    input.value = Math.round((Date.now() - startedAt) / 1000);
+  }, 250);
+  plankTimers.set(row, id);
+}
 
 function checkSessionComplete(list){
   const btns = $$(".set-btn", list);
@@ -436,6 +465,9 @@ async function renderExercises(){
   const token = ++exRenderToken;
   const list = $("#exList");
   const day = PROGRAM[currentSession];
+
+  plankTimers.forEach(id => clearInterval(id));
+  plankTimers.clear();
 
   const [logsResult, ...lastResults] = await Promise.allSettled([
     api(`/api/logs?date=${todayISO()}`),
@@ -464,7 +496,10 @@ async function renderExercises(){
       setsHtml += item.timed ? `
         <div class="set-row timed ${saved ? "done" : ""}" data-ex="${encodeURIComponent(item.ex)}" data-n="${n}">
           <div class="n">${n}</div>
-          <div class="field-unit span2">
+          <button class="timer-btn" type="button" aria-label="Cronómetro">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          </button>
+          <div class="field-unit">
             <input type="number" inputmode="numeric" class="t-input" placeholder="${rPlaceholder}" value="${saved?.reps ?? ""}">
             <span class="unit-label">seg</span>
           </div>
@@ -544,12 +579,17 @@ async function renderExercises(){
     });
   });
 
+  $$(".timer-btn", list).forEach(btn=>{
+    btn.addEventListener("click", ()=> toggleSetStopwatch(btn));
+  });
+
   $$(".set-btn", list).forEach(btn=>{
     btn.addEventListener("click", async ()=>{
       const row = btn.closest(".set-row");
       const ex = decodeURIComponent(row.dataset.ex);
       const n = Number(row.dataset.n);
       const isTimed = row.classList.contains("timed");
+      if(isTimed && plankTimers.has(row)) toggleSetStopwatch($(".timer-btn", row));
       const weight = isTimed ? null : (parseFloat($(".w-input", row).value) || null);
       const reps = isTimed ? (parseInt($(".t-input", row).value) || null) : (parseInt($(".r-input", row).value) || null);
       if(isTimed ? reps === null : (weight === null && reps === null)){
