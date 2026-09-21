@@ -48,6 +48,13 @@ header.top .sub{font-size:12.5px; color:var(--muted); margin-top:2px;}
   background:var(--chip-bg); border:1px solid transparent; cursor:pointer;
 }
 .tab.active{background:var(--accent); color:var(--accent-ink);}
+.next-session{
+  display:flex; align-items:center; gap:7px; width:100%; margin-top:10px;
+  background:var(--ok-bg); color:var(--ok); border:none; border-radius:10px;
+  padding:9px 11px; font-family:Inter; font-size:12.5px; font-weight:600; text-align:left; cursor:pointer;
+}
+.next-session[hidden]{display:none;}
+.next-session svg{width:14px; height:14px; flex-shrink:0;}
 main{padding:14px 16px 24px;}
 .view{display:none;}
 .view.active{display:block;}
@@ -258,6 +265,7 @@ nav.bottom svg{width:20px; height:20px;}
     <div class="tab" data-s="B">Sesión B</div>
     <div class="tab" data-s="C">Sesión C</div>
   </div>
+  <button class="next-session" id="nextSessionBanner" type="button" hidden></button>
 </header>
 
 <main>
@@ -1071,6 +1079,36 @@ function renderVolumen(){
   `;
 }
 
+function daysSince(dateStr){
+  const then = new Date(dateStr + "T00:00:00Z");
+  const now = new Date(todayISO() + "T00:00:00Z");
+  return Math.round((now - then) / 86400000);
+}
+
+function loadNextSessionSuggestion(){
+  api("/api/last-session").then(data => {
+    if(!data || !data.session) return;
+    const order = ["A","B","C"];
+    const idx = order.indexOf(data.session);
+    if(idx === -1) return;
+    const next = order[(idx + 1) % order.length];
+    const days = daysSince(data.date);
+    const dateLabel = days <= 0 ? "hoy" : days === 1 ? "ayer" : `hace ${days} días`;
+    const btn = $("#nextSessionBanner");
+    btn.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      Última: Sesión ${data.session} (${dateLabel}) · Seguir con Sesión ${next}
+    `;
+    btn.hidden = false;
+    btn.onclick = () => {
+      currentSession = next;
+      localStorage.setItem("fbe_session", currentSession);
+      renderTabs();
+      renderExercises();
+    };
+  }).catch(()=>{});
+}
+
 function fillHistorySelect(){
   const sel = $("#historyExercise");
   const all = [...PROGRAM.A, ...PROGRAM.B, ...PROGRAM.C];
@@ -1166,6 +1204,7 @@ renderTabs();
 fillHistorySelect();
 renderVolumen();
 renderExercises();
+loadNextSessionSuggestion();
 
 if("serviceWorker" in navigator){
   window.addEventListener("load", ()=>{

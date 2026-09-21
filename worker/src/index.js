@@ -48,6 +48,13 @@ export default {
         return json({ error: "Falta date o exercise" }, 400);
       }
 
+      if (pathname === "/api/last-session" && request.method === "GET") {
+        const { results } = await env.DB.prepare(
+          `SELECT date, session FROM logs ORDER BY date DESC, created_at DESC LIMIT 1`
+        ).all();
+        return json(results[0] || null);
+      }
+
       if (pathname === "/api/last" && request.method === "GET") {
         const exercise = searchParams.get("exercise");
         if (!exercise) return json({ error: "Falta exercise" }, 400);
