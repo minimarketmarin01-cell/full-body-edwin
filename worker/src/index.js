@@ -1,4 +1,4 @@
-// Auto-deploy vía Cloudflare Workers Builds (conectado a GitHub)
+// Auto-deploy vía Cloudflare Workers Builds (directorio raíz: worker)
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET,POST,DELETE,OPTIONS",
