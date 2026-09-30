@@ -360,28 +360,32 @@ nav.bottom svg{width:20px; height:20px;}
 <script>
 const PROGRAM = {
   A: [
-    {ex:"Sentadilla (back squat)", grupo:"Cuádriceps", series:3, reps:"8-10", rir:"2", notas:"Técnica primero; profundidad completa cómoda", sec:["Glúteo","Isquiotibiales","Core"], descanso:150},
-    {ex:"Press banca (barra o mancuerna)", grupo:"Pecho", series:3, reps:"8-10", rir:"2", sec:["Tríceps","Hombro"], descanso:150},
-    {ex:"Remo con barra", grupo:"Espalda", series:3, reps:"10-12", rir:"2", sec:["Bíceps"], descanso:120},
-    {ex:"Press militar mancuerna", grupo:"Hombro", series:3, reps:"10-12", rir:"2", sec:["Tríceps","Core"], descanso:120},
-    {ex:"Curl femoral tumbado", grupo:"Isquiotibiales", series:3, reps:"12-15", rir:"1.5", sec:["Glúteo"], descanso:75},
-    {ex:"Curl bíceps con barra o mancuerna", grupo:"Bíceps", series:2, reps:"12-15", rir:"1", sec:[], descanso:75},
+    {ex:"Sentadilla hack (máquina)", grupo:"Cuádriceps", series:3, reps:"8-10", rir:"2", notas:"Semana 1: RIR 3 para calibrar cargas", sec:["Glúteo"], descanso:150},
+    {ex:"Press inclinado con barra", grupo:"Pecho", series:3, reps:"8-10", rir:"2", sec:["Tríceps","Hombro"], descanso:150},
+    {ex:"Remo en T-bar o máquina con pecho apoyado", grupo:"Espalda", series:3, reps:"10-12", rir:"2", sec:["Bíceps"], descanso:120},
+    {ex:"Press Arnold con mancuernas", grupo:"Hombro", series:3, reps:"10-12", rir:"2", sec:["Tríceps"], descanso:120},
+    {ex:"Curl femoral sentado", grupo:"Isquiotibiales", series:3, reps:"12-15", rir:"1.5", sec:[], descanso:75},
+    {ex:"Curl inclinado con mancuernas (banco 45°)", grupo:"Bíceps", series:3, reps:"10-12", rir:"1.5", notas:"Bíceps trabajado en posición elongada", sec:[], descanso:75},
+    {ex:"Extensión de tríceps sobre la cabeza en polea", grupo:"Tríceps", series:3, reps:"10-12", rir:"1.5", notas:"Cabeza larga del tríceps en posición elongada", sec:[], descanso:60},
+    {ex:"Elevación de piernas colgado", grupo:"Core", series:3, reps:"10-15", rir:"1.5", notas:"Énfasis en abdomen inferior/flexores de cadera", sec:[], descanso:60},
   ],
   B: [
-    {ex:"Peso muerto rumano", grupo:"Isquiotibiales", series:3, reps:"8-10", rir:"2", notas:"Rango sin perder la curva lumbar neutra", sec:["Glúteo","Espalda"], descanso:150},
-    {ex:"Press inclinado mancuerna", grupo:"Pecho", series:3, reps:"10-12", rir:"2", sec:["Hombro","Tríceps"], descanso:120},
-    {ex:"Jalón al pecho", grupo:"Espalda", series:3, reps:"10-12", rir:"2", sec:["Bíceps"], descanso:120},
-    {ex:"Elevaciones laterales", grupo:"Hombro", series:3, reps:"15-20", rir:"1", sec:[], descanso:60},
-    {ex:"Extensión de cuádriceps", grupo:"Cuádriceps", series:3, reps:"12-15", rir:"1.5", sec:[], descanso:75},
-    {ex:"Tríceps en polea", grupo:"Tríceps", series:3, reps:"12-15", rir:"1", sec:[], descanso:60},
+    {ex:"Peso muerto rumano con mancuernas", grupo:"Isquiotibiales", series:3, reps:"8-10", rir:"2", sec:["Glúteo","Espalda"], descanso:150},
+    {ex:"Press plano con mancuernas", grupo:"Pecho", series:3, reps:"10-12", rir:"2", sec:["Tríceps","Hombro"], descanso:120},
+    {ex:"Jalón agarre neutro o dominadas asistidas", grupo:"Espalda", series:3, reps:"8-12", rir:"2", sec:["Bíceps"], descanso:120},
+    {ex:"Elevaciones laterales en polea", grupo:"Hombro", series:3, reps:"15-20", rir:"1", sec:[], descanso:60},
+    {ex:"Sentadilla búlgara", grupo:"Cuádriceps", series:3, reps:"8-10", rir:"2", notas:"Cada pierna se registra por separado", sec:["Glúteo"], descanso:120, unilateral:true},
+    {ex:"Press francés con barra Z", grupo:"Tríceps", series:3, reps:"10-12", rir:"1.5", sec:[], descanso:75},
+    {ex:"Rueda abdominal (ab wheel)", grupo:"Core", series:3, reps:"8-12", rir:"1.5", notas:"Anti-extensión, buen estímulo de grosor/fuerza abdominal", sec:[], descanso:75},
   ],
   C: [
-    {ex:"Prensa de piernas", grupo:"Cuádriceps", series:3, reps:"10-12", rir:"2", sec:["Glúteo"], descanso:120},
-    {ex:"Remo unilateral mancuerna", grupo:"Espalda", series:3, reps:"10-12", rir:"2", notas:"Cada brazo se registra por separado", sec:["Bíceps"], descanso:120, unilateral:true},
-    {ex:"Press militar barra", grupo:"Hombro", series:3, reps:"8-10", rir:"2", sec:["Tríceps"], descanso:150},
-    {ex:"Hip thrust", grupo:"Glúteo", series:3, reps:"10-12", rir:"2", sec:["Isquiotibiales"], descanso:120},
-    {ex:"Face pull", grupo:"Hombro", series:3, reps:"15", rir:"1", notas:"Deltoide posterior / salud de hombro", view:"back", sec:["Espalda"], descanso:60},
-    {ex:"Plancha / core", grupo:"Core", series:3, reps:"30-45s", rir:"—", notas:"Series por tiempo", sec:[], descanso:60, timed:true},
+    {ex:"Prensa de piernas (pies bajos y juntos)", grupo:"Cuádriceps", series:3, reps:"10-12", rir:"2", notas:"Variación de postura de pies", sec:["Glúteo"], descanso:120},
+    {ex:"Remo en polea baja agarre neutro", grupo:"Espalda", series:3, reps:"10-12", rir:"2", sec:["Bíceps"], descanso:120},
+    {ex:"Press militar con barra (de pie)", grupo:"Hombro", series:3, reps:"8-10", rir:"2", notas:"Se mantiene igual para seguir progresión de carga", sec:["Tríceps"], descanso:150},
+    {ex:"Hip thrust con pausa de 1 s arriba", grupo:"Glúteo", series:3, reps:"10-12", rir:"2", notas:"Pausa isométrica", sec:["Isquiotibiales"], descanso:120},
+    {ex:"Face pull", grupo:"Hombro", series:3, reps:"15", rir:"1", notas:"Salud de hombro, se mantiene", view:"back", sec:["Espalda"], descanso:60},
+    {ex:"Curl martillo con cuerda en polea", grupo:"Bíceps", series:3, reps:"10-12", rir:"1.5", sec:[], descanso:75},
+    {ex:"Crunch en polea alta", grupo:"Core", series:3, reps:"12-15", rir:"1.5", sec:[], descanso:60},
   ],
 };
 
@@ -397,9 +401,9 @@ const VOLUMEN = [
   {grupo:"Pecho", a:3, b:3, c:0, total:6, rango:"10-16 series/sem"},
   {grupo:"Espalda", a:3, b:3, c:3, total:9, rango:"10-18 series/sem"},
   {grupo:"Hombro", a:3, b:3, c:6, total:12, rango:"10-18 series/sem"},
-  {grupo:"Bíceps", a:2, b:0, c:0, total:2, rango:"6-12 series/sem"},
-  {grupo:"Tríceps", a:0, b:3, c:0, total:3, rango:"6-12 series/sem"},
-  {grupo:"Core", a:0, b:0, c:3, total:3, rango:"4-8 series directas"},
+  {grupo:"Bíceps", a:3, b:0, c:3, total:6, rango:"6-12 series/sem"},
+  {grupo:"Tríceps", a:3, b:3, c:0, total:6, rango:"6-12 series/sem"},
+  {grupo:"Core", a:3, b:3, c:3, total:9, rango:"6-12 series/sem"},
 ];
 
 const $ = (sel, root=document) => root.querySelector(sel);
@@ -772,155 +776,191 @@ function muscleDiagram(item){
  * para embed, basta con reemplazar su videoId aquí.
  */
 const TECHNIQUE_VIDEOS = {
-  "Sentadilla (back squat)": {
-    videoId: "sI-CVQ1kfmc",
+  "Sentadilla hack (máquina)": {
+    videoId: "UGwJSxjnDmY",
     pasos: [
-      "Pies al ancho de hombros, pecho arriba, mirada al frente.",
-      "Baja flexionando cadera y rodillas a la vez, manteniendo la espalda neutra.",
-      "Desciende hasta donde tu movilidad lo permita sin perder la curva lumbar, luego empuja el piso para subir.",
+      "Espalda y hombros pegados al respaldo durante todo el movimiento.",
+      "Baja controladamente hasta 90° de rodilla o donde tu movilidad lo permita.",
+      "Empuja con los talones sin despegar los pies de la plataforma.",
     ],
     errores: [
-      "Rodillas colapsando hacia adentro al subir.",
-      "Redondear la espalda baja en el fondo del movimiento.",
+      "Despegar la zona lumbar del respaldo al bajar.",
+      "Empujar con la punta de los pies en vez de con el talón.",
     ],
   },
-  "Press banca (barra o mancuerna)": {
-    videoId: "7aQY3u0Dk-Q",
+  "Press inclinado con barra": {
+    videoId: "JR2Ct-AuQwc",
     pasos: [
-      "Escápulas retraídas y pies firmes en el piso durante todo el movimiento.",
-      "Baja la barra de forma controlada hasta rozar el pecho, cerca de la línea del pezón.",
-      "Empuja en línea recta hacia arriba hasta extender los codos sin bloquear de golpe.",
+      "Banco entre 30-45°, escápulas retraídas.",
+      "Baja la barra de forma controlada hacia la parte alta del pecho.",
+      "Empuja en línea recta hacia arriba sin bloquear de golpe.",
     ],
     errores: [
-      "Rebotar la barra en el pecho.",
-      "Despegar los glúteos del banco para ganar impulso.",
+      "Inclinar el banco a más de 45° (pierde énfasis en pectoral).",
+      "Bajar la barra hacia el cuello en vez de la parte alta del pecho.",
     ],
   },
-  "Remo con barra": {
-    videoId: "qsbJcaAneaw",
+  "Remo en T-bar o máquina con pecho apoyado": {
+    videoId: "2anoS6A5DrU",
     pasos: [
-      "Cadera atrás, torso inclinado ~45°, espalda neutra durante toda la serie.",
-      "Tira la barra hacia el abdomen bajo llevando los codos hacia atrás.",
-      "Controla el descenso hasta extender completamente los brazos.",
+      "Pecho firme contra el respaldo durante toda la serie.",
+      "Tira llevando los codos hacia atrás, apretando la espalda arriba.",
+      "Controla el regreso sin dejar caer el peso de golpe.",
     ],
     errores: [
-      "Usar impulso de la zona lumbar (\"tirón\" de cadera) en vez de tracción de espalda.",
-      "Encoger los hombros en vez de llevar los codos hacia atrás.",
+      "Despegar el pecho del respaldo para sumar impulso.",
+      "Tirar solo con los brazos sin llevar los codos atrás.",
     ],
   },
-  "Press militar mancuerna": {
-    videoId: "nDj1mBKEJcY",
+  "Press Arnold con mancuernas": {
+    videoId: "l5tNUbpusCA",
     pasos: [
-      "Core apretado y glúteos activados para proteger la zona lumbar.",
-      "Empuja las mancuernas hacia arriba en línea recta, sin arquear la espalda.",
-      "Baja controladamente hasta la altura de los hombros.",
+      "Empieza con las palmas mirando hacia ti, mancuernas a la altura de los hombros.",
+      "Empuja hacia arriba mientras rotas las muñecas hasta que las palmas miren al frente.",
+      "Baja controladamente invirtiendo la rotación hasta la posición inicial.",
     ],
     errores: [
-      "Arquear excesivamente la espalda baja para compensar falta de movilidad.",
-      "Empujar las mancuernas hacia adelante en vez de hacia arriba.",
+      "Arquear la espalda baja para ayudarse a subir el peso.",
+      "Rotar demasiado rápido, perdiendo el control del hombro.",
     ],
   },
-  "Curl femoral tumbado": {
-    videoId: "9xbBr5Ytl8c",
+  "Curl femoral sentado": {
+    videoId: "CBCPBnMzsMI",
     pasos: [
-      "Ajusta el rodillo justo sobre el tendón de Aquiles.",
-      "Flexiona la rodilla llevando el rodillo hacia los glúteos, sin levantar la cadera del banco.",
+      "Ajusta el respaldo y el rodillo a la altura de tus piernas.",
+      "Flexiona la rodilla llevando el rodillo hacia los glúteos.",
       "Controla el regreso hasta extender casi por completo.",
     ],
     errores: [
-      "Levantar la cadera para completar la repetición.",
-      "Usar impulso en vez de controlar todo el recorrido.",
+      "Usar impulso o rebote en vez de control.",
+      "No ajustar bien el rodillo, perdiendo rango de movimiento.",
     ],
   },
-  "Curl bíceps con barra o mancuerna": {
-    videoId: "uDLZNOqv3EA",
+  "Curl inclinado con mancuernas (banco 45°)": {
+    videoId: "P1L6CD-tSnE",
     pasos: [
-      "Codos pegados al torso durante todo el movimiento.",
-      "Sube la barra contrayendo el bíceps, sin balancear el cuerpo.",
-      "Baja de forma controlada hasta extender el brazo.",
+      "Banco a 45°, espalda totalmente apoyada, brazos colgando.",
+      "Sube contrayendo el bíceps sin mover el hombro hacia adelante.",
+      "Baja de forma controlada hasta la extensión completa.",
     ],
     errores: [
-      "Balancear el torso o usar impulso de cadera (\"cheat curl\").",
-      "Mover los codos hacia adelante al subir la barra.",
+      "Despegar los hombros del banco al subir el peso.",
+      "Usar demasiado peso y perder el estiramiento completo abajo.",
     ],
   },
-  "Peso muerto rumano": {
-    videoId: "pCrNlGFo7h4",
+  "Extensión de tríceps sobre la cabeza en polea": {
+    videoId: "Z8Qmv4ByV14",
+    pasos: [
+      "De espaldas a la polea, codos apuntando al frente y fijos.",
+      "Extiende los brazos hacia adelante-arriba sin mover los codos.",
+      "Controla el regreso sintiendo el estiramiento del tríceps.",
+    ],
+    errores: [
+      "Abrir los codos hacia los lados durante el movimiento.",
+      "Usar el impulso del torso en vez de solo el tríceps.",
+    ],
+  },
+  "Elevación de piernas colgado": {
+    videoId: "mXJ5bEoh-vk",
+    pasos: [
+      "Cuélgate de la barra con agarre firme, cuerpo estable.",
+      "Eleva las piernas (o rodillas) llevando la pelvis hacia arriba, no solo las piernas.",
+      "Baja controladamente sin balancear el cuerpo.",
+    ],
+    errores: [
+      "Balancearse usando impulso en vez de controlar el movimiento.",
+      "Elevar solo con flexión de cadera sin involucrar el abdomen.",
+    ],
+  },
+  "Peso muerto rumano con mancuernas": {
+    videoId: "Y8jFtqIoyyU",
     pasos: [
       "Rodillas con flexión mínima; la cadera inicia el movimiento hacia atrás.",
-      "Baja la barra pegada a las piernas manteniendo la espalda neutra.",
-      "Detente cuando sientas el estiramiento en isquiotibiales y vuelve extendiendo cadera.",
+      "Baja las mancuernas pegadas a las piernas manteniendo la espalda neutra.",
+      "Detente al sentir el estiramiento en isquiotibiales y vuelve extendiendo cadera.",
     ],
     errores: [
       "Redondear la espalda baja.",
-      "Flexionar demasiado las rodillas, convirtiéndolo en una sentadilla.",
+      "Flexionar demasiado las rodillas, convirtiéndolo en sentadilla.",
     ],
   },
-  "Press inclinado mancuerna": {
-    videoId: "OhnoqtPEpzM",
+  "Press plano con mancuernas": {
+    videoId: "RBqBbx1GvYY",
     pasos: [
-      "Banco entre 30-45°, escápulas retraídas.",
-      "Baja las mancuernas de forma controlada hasta la altura del pecho.",
-      "Empuja hacia arriba y ligeramente hacia adentro sin chocar las mancuernas.",
+      "Escápulas retraídas, pies firmes en el piso.",
+      "Baja las mancuernas de forma controlada a los lados del pecho.",
+      "Empuja hacia arriba y ligeramente hacia adentro sin chocarlas.",
     ],
     errores: [
-      "Inclinar el banco a más de 45° (se parece más a un press militar).",
       "Bajar las mancuernas demasiado rápido sin control.",
+      "Extender los codos por completo y bloquear con fuerza arriba.",
     ],
   },
-  "Jalón al pecho": {
-    videoId: "eSlKErmf5WU",
+  "Jalón agarre neutro o dominadas asistidas": {
+    videoId: "B2vOdTyP6Pk",
     pasos: [
-      "Agarre un poco más ancho que los hombros, torso ligeramente inclinado atrás.",
-      "Tira la barra hacia la parte alta del pecho llevando los codos hacia abajo y atrás.",
+      "Agarre neutro (palmas enfrentadas) al ancho de los hombros.",
+      "Tira llevando los codos hacia abajo y atrás, pecho arriba.",
       "Controla el regreso hasta extender completamente los brazos.",
     ],
     errores: [
       "Usar impulso balanceando el torso hacia atrás.",
-      "Tirar la barra hasta la nuca.",
+      "Tirar solo con los brazos sin activar la espalda.",
     ],
   },
-  "Elevaciones laterales": {
-    videoId: "aVa9ce3SlSA",
+  "Elevaciones laterales en polea": {
+    videoId: "zkP3tV_NwnY",
     pasos: [
-      "Codos con ligera flexión fija durante todo el movimiento.",
-      "Eleva los brazos hacia los lados hasta la altura de los hombros.",
-      "Baja de forma controlada sin dejar caer el peso.",
+      "Polea baja, cuerpo de lado respecto a la máquina.",
+      "Eleva el brazo hacia el lado hasta la altura del hombro con codo semiflexionado.",
+      "Baja de forma controlada manteniendo tensión constante del cable.",
     ],
     errores: [
       "Usar impulso balanceando el cuerpo para subir el peso.",
-      "Elevar por encima de la altura de los hombros encogiendo el trapecio.",
+      "Elevar por encima de la altura del hombro encogiendo el trapecio.",
     ],
   },
-  "Extensión de cuádriceps": {
-    videoId: "ndnA6yvGoqQ",
+  "Sentadilla búlgara": {
+    videoId: "1ESNjB6mlpI",
     pasos: [
-      "Ajusta el respaldo para que la rodilla quede alineada con el eje de la máquina.",
-      "Extiende la pierna contrayendo el cuádriceps sin despegar la espalda del respaldo.",
-      "Baja de forma controlada sin soltar el peso de golpe.",
+      "Pie trasero apoyado en el banco, la mayoría del peso en la pierna delantera.",
+      "Baja controladamente hasta que la rodilla trasera casi toque el piso.",
+      "Empuja con el talón de la pierna delantera para subir.",
     ],
     errores: [
-      "Usar impulso o rebote en la parte baja del movimiento.",
-      "Extender con tirón brusco en vez de contracción controlada.",
+      "Dar un paso muy corto, cargando demasiado la rodilla delantera.",
+      "Empujar con la punta del pie en vez de con el talón.",
     ],
   },
-  "Tríceps en polea": {
-    videoId: "bluq3g4XIWg",
+  "Press francés con barra Z": {
+    videoId: "BIca6STWIXQ",
     pasos: [
-      "Codos pegados al torso, fijos durante todo el recorrido.",
-      "Extiende los brazos empujando la barra o cuerda hacia abajo.",
-      "Controla el regreso sin dejar que el peso suba de golpe.",
+      "Acostado, brazos perpendiculares al piso, codos fijos apuntando al techo.",
+      "Baja la barra hacia la frente flexionando solo el codo.",
+      "Extiende de vuelta sin mover los hombros.",
     ],
     errores: [
-      "Separar los codos del torso, sumando el hombro al movimiento.",
-      "Inclinar el torso hacia adelante para ayudarse con el peso del cuerpo.",
+      "Mover los codos hacia afuera o adelante durante el descenso.",
+      "Bajar la barra demasiado rápido, perdiendo el control cerca de la cabeza.",
     ],
   },
-  "Prensa de piernas": {
+  "Rueda abdominal (ab wheel)": {
+    videoId: "b01FmYynI2o",
+    pasos: [
+      "De rodillas, core apretado antes de iniciar el movimiento.",
+      "Rueda hacia adelante manteniendo la espalda recta, sin arquear la zona lumbar.",
+      "Regresa contrayendo el abdomen, sin usar los brazos como motor principal.",
+    ],
+    errores: [
+      "Arquear la espalda baja al extenderse hacia adelante.",
+      "Avanzar más de lo que el core puede controlar y perder la posición.",
+    ],
+  },
+  "Prensa de piernas (pies bajos y juntos)": {
     videoId: "ccDlOeZ90hs",
     pasos: [
-      "Pies al ancho de hombros sobre la plataforma, espalda pegada al respaldo.",
-      "Baja controladamente hasta formar ~90° en la rodilla, sin despegar la zona lumbar.",
+      "Pies en la parte baja de la plataforma, juntos.",
+      "Baja controladamente hasta 90° de rodilla sin despegar la zona lumbar.",
       "Empuja sin extender ni bloquear las rodillas de golpe.",
     ],
     errores: [
@@ -928,19 +968,19 @@ const TECHNIQUE_VIDEOS = {
       "Bloquear las rodillas con fuerza en la extensión completa.",
     ],
   },
-  "Remo unilateral mancuerna": {
-    videoId: "ThYEWIpPB0o",
+  "Remo en polea baja agarre neutro": {
+    videoId: "hiujo_wbkLU",
     pasos: [
-      "Apoya rodilla y mano del mismo lado en el banco, espalda paralela al piso.",
-      "Tira la mancuerna hacia la cadera llevando el codo hacia atrás.",
-      "Baja controladamente hasta extender el brazo por completo.",
+      "Espalda recta, rodillas con leve flexión, pecho arriba.",
+      "Tira el agarre hacia el abdomen llevando los codos hacia atrás.",
+      "Controla el regreso hasta extender completamente los brazos.",
     ],
     errores: [
-      "Rotar el torso para ayudar a subir el peso.",
-      "Tirar hacia el hombro en vez de hacia la cadera.",
+      "Usar impulso balanceando el torso hacia adelante y atrás.",
+      "Encoger los hombros en vez de llevar los codos atrás.",
     ],
   },
-  "Press militar barra": {
+  "Press militar con barra (de pie)": {
     videoId: "BShy9IEmrPg",
     pasos: [
       "Agarre al ancho de hombros, core y glúteos activados.",
@@ -952,15 +992,15 @@ const TECHNIQUE_VIDEOS = {
       "Empujar la barra hacia adelante en vez de en línea recta.",
     ],
   },
-  "Hip thrust": {
+  "Hip thrust con pausa de 1 s arriba": {
     videoId: "vOuz3pUWU0Y",
     pasos: [
       "Apoya la parte alta de la espalda en el banco, barra sobre la cadera.",
-      "Empuja la cadera hacia arriba apretando los glúteos al máximo arriba.",
+      "Empuja la cadera hacia arriba y mantén 1 segundo apretando los glúteos arriba.",
       "Baja controladamente sin que la cadera toque el piso entre repeticiones.",
     ],
     errores: [
-      "Hiperextender la espalda baja en vez de terminar el movimiento con la cadera.",
+      "Saltarse la pausa de arriba, perdiendo la contracción máxima.",
       "Empujar con las piernas en vez de con los glúteos.",
     ],
   },
@@ -976,16 +1016,28 @@ const TECHNIQUE_VIDEOS = {
       "Tirar hacia abajo en vez de hacia la cara/frente.",
     ],
   },
-  "Plancha / core": {
-    videoId: "nmX0DysvqcQ",
+  "Curl martillo con cuerda en polea": {
+    videoId: "Ox0KaS9pGH4",
     pasos: [
-      "Antebrazos y puntas de los pies apoyados, cuerpo en línea recta de cabeza a talones.",
-      "Aprieta abdomen y glúteos para evitar que la cadera caiga o suba.",
-      "Respira de forma controlada manteniendo la posición el tiempo indicado.",
+      "Agarre neutro (tipo martillo) sujetando la cuerda, codos pegados al torso.",
+      "Sube contrayendo el bíceps y antebrazo sin mover el codo.",
+      "Baja de forma controlada hasta extender el brazo.",
     ],
     errores: [
-      "Dejar caer la cadera (arqueo lumbar).",
-      "Elevar demasiado la cadera, perdiendo la línea recta del cuerpo.",
+      "Balancear el cuerpo para ayudarse a subir el peso.",
+      "Mover el codo hacia adelante durante la subida.",
+    ],
+  },
+  "Crunch en polea alta": {
+    videoId: "ui3iEsYbXtI",
+    pasos: [
+      "De rodillas frente a la polea alta, cuerda o soga detrás del cuello.",
+      "Flexiona el torso hacia abajo contrayendo el abdomen, cadera fija.",
+      "Regresa de forma controlada sin extender completamente la espalda.",
+    ],
+    errores: [
+      "Tirar con los brazos en vez de flexionar con el abdomen.",
+      "Mover la cadera hacia atrás en vez de flexionar la columna.",
     ],
   },
 };
