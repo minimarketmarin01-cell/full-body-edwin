@@ -297,6 +297,12 @@ nav.bottom svg{width:20px; height:20px;}
     <p class="status-line" style="margin-top:0;">La app se conecta sola a su base de datos. Usa este botón solo si algo no está guardando bien.</p>
     <button class="btn-secondary" id="testApiUrl">Probar conexión</button>
     <div class="status-line" id="apiStatus"></div>
+    <div class="settings-row" style="margin-top:20px;">
+      <label>Notificaciones de descanso</label>
+      <p class="status-line" style="margin-top:0;">Avisa con sonido y notificación cuando termina el descanso, aunque minimices la app.</p>
+      <button class="btn-secondary" id="enableNotifications">Activar notificaciones</button>
+      <div class="status-line" id="notifyStatus"></div>
+    </div>
   </section>
 </main>
 
@@ -629,6 +635,8 @@ async function renderExercises(){
         toast(isTimed ? "Ingresa los segundos" : "Ingresa peso o reps");
         return;
       }
+      ensureAudioCtx();
+      ensureNotifyPermission();
       try{
         await api("/api/logs", {method:"POST", body: JSON.stringify({
           date: todayISO(), session: currentSession, exercise: ex, set_number: n, weight, reps, rir: null
@@ -1071,6 +1079,73 @@ let restTimerTotal = 0;
 let restTimerEndAt = 0;
 let restTimerDone = false;
 
+let audioCtx = null;
+function ensureAudioCtx(){
+  if(!audioCtx){
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if(!Ctx) return null;
+    audioCtx = new Ctx();
+  }
+  if(audioCtx.state === "suspended") audioCtx.resume();
+  return audioCtx;
+}
+
+function playRestEndBeep(){
+  const ctx = ensureAudioCtx();
+  if(!ctx) return;
+  const now = ctx.currentTime;
+  [[880, 0, 0.16], [1046, 0.2, 0.28]].forEach(([freq, start, dur])=>{
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.0001, now + start);
+    gain.gain.exponentialRampToValueAtTime(0.3, now + start + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + start + dur);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(now + start);
+    osc.stop(now + start + dur + 0.05);
+  });
+}
+
+function ensureNotifyPermission(){
+  if(typeof Notification === "undefined") return;
+  if(Notification.permission === "default"){
+    Notification.requestPermission().then(updateNotifyStatus);
+  }
+}
+
+function updateNotifyStatus(){
+  const el = $("#notifyStatus");
+  if(!el) return;
+  if(typeof Notification === "undefined"){ el.textContent = "No disponible en este navegador"; return; }
+  const map = {
+    granted: `<span class="status-dot" style="background:var(--ok)"></span>Activadas`,
+    denied: `<span class="status-dot" style="background:#c0392b"></span>Bloqueadas (actívalas desde los ajustes del navegador)`,
+    default: "Aún no activadas",
+  };
+  el.innerHTML = map[Notification.permission] || "";
+}
+
+async function showRestNotification(title, body, opts){
+  if(typeof Notification === "undefined" || Notification.permission !== "granted") return;
+  if(!("serviceWorker" in navigator)) return;
+  try{
+    const reg = await navigator.serviceWorker.ready;
+    await reg.showNotification(title, {body, tag:"fbe-rest-timer", renotify:false, silent:true, ...opts});
+  }catch(e){}
+}
+
+async function closeRestNotification(){
+  if(typeof Notification === "undefined" || Notification.permission !== "granted") return;
+  if(!("serviceWorker" in navigator)) return;
+  try{
+    const reg = await navigator.serviceWorker.ready;
+    const notifs = await reg.getNotifications({tag:"fbe-rest-timer"});
+    notifs.forEach(n => n.close());
+  }catch(e){}
+}
+
 function formatClock(sec){
   const m = Math.floor(sec / 60);
   const s = sec % 60;
@@ -1090,8 +1165,12 @@ function tickRestTimer(){
     restTimerDone = true;
     clearInterval(restTimerInterval);
     if(navigator.vibrate) navigator.vibrate([200,100,200]);
+    playRestEndBeep();
     toast("Descanso terminado");
-    setTimeout(()=>{ $("#restTimer").hidden = true; }, 1500);
+    showRestNotification("Descanso terminado", "Listo para la siguiente serie", {silent:false, vibrate:[200,100,200]});
+    setTimeout(()=>{ $("#restTimer").hidden = true; closeRestNotification(); }, 4000);
+  } else if(document.hidden){
+    showRestNotification("Descanso", `Quedan ${formatClock(Math.max(remaining,0))}`, {silent:true});
   }
 }
 
@@ -1108,11 +1187,13 @@ function startRestTimer(seconds){
 function stopRestTimer(){
   clearInterval(restTimerInterval);
   $("#restTimer").hidden = true;
+  closeRestNotification();
 }
 
 document.addEventListener("visibilitychange", ()=>{
   if(document.visibilityState === "visible" && !$("#restTimer").hidden){
     tickRestTimer();
+    if(!restTimerDone) closeRestNotification();
   }
 });
 
@@ -1282,6 +1363,15 @@ $("#restTimerAdd").addEventListener("click", ()=>{
 });
 $("#restTimerSkip").addEventListener("click", stopRestTimer);
 
+$("#enableNotifications").addEventListener("click", ()=>{
+  if(typeof Notification === "undefined") return;
+  if(Notification.permission === "default"){
+    Notification.requestPermission().then(updateNotifyStatus);
+  } else {
+    updateNotifyStatus();
+  }
+});
+
 $("#testApiUrl").addEventListener("click", async ()=>{
   const status = $("#apiStatus");
   status.textContent = "Probando…";
@@ -1300,6 +1390,7 @@ fillHistorySelect();
 renderVolumen();
 renderExercises();
 loadNextSessionSuggestion();
+updateNotifyStatus();
 
 if("serviceWorker" in navigator){
   window.addEventListener("load", ()=>{
