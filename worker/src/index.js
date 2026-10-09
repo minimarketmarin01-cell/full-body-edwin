@@ -207,33 +207,50 @@ export default {
           "por la porción), y porcion_g es el tamaño de la porción declarada en el " +
           "envase, solo como referencia de cuánto se suele comer de una vez.";
 
-        const aiRes = await fetch(
+        const geminiUrl =
           "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=" +
-            env.GEMINI_API_KEY,
-          {
+          env.GEMINI_API_KEY;
+        const geminiBody = JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  inline_data: {
+                    mime_type: body.mediaType || "image/jpeg",
+                    data: body.image,
+                  },
+                },
+                { text: prompt },
+              ],
+            },
+          ],
+        });
+
+        let aiRes = await fetch(geminiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: geminiBody,
+        });
+
+        // El tier gratis de Gemini a veces devuelve 503 por alta demanda
+        // momentánea: un solo reintento tras una breve espera resuelve la
+        // mayoría de esos casos sin molestar al usuario.
+        if (aiRes.status === 503) {
+          await new Promise((r) => setTimeout(r, 1500));
+          aiRes = await fetch(geminiUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [
-                {
-                  parts: [
-                    {
-                      inline_data: {
-                        mime_type: body.mediaType || "image/jpeg",
-                        data: body.image,
-                      },
-                    },
-                    { text: prompt },
-                  ],
-                },
-              ],
-            }),
-          }
-        );
+            body: geminiBody,
+          });
+        }
 
         if (!aiRes.ok) {
           const errText = await aiRes.text();
-          return json({ error: "Error de la IA: " + errText }, 502);
+          const friendly =
+            aiRes.status === 503
+              ? "El modelo de IA está saturado por alta demanda en este momento. Intenta de nuevo en un minuto, o agrégalo manualmente."
+              : "Error de la IA: " + errText;
+          return json({ error: friendly }, 502);
         }
         const aiData = await aiRes.json();
         const text = aiData.candidates?.[0]?.content?.parts?.[0]?.text || "";

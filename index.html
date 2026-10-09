@@ -444,7 +444,35 @@ nav.bottom svg{width:20px; height:20px;}
     <p class="food-photo-hint">Sirve para una foto del plato, o la tabla nutricional de un envase</p>
     <input type="file" accept="image/*" capture="environment" id="foodPhotoInput" hidden>
     <input type="file" accept="image/*" id="foodGalleryInput" hidden>
+    <button class="meal-add" id="manualAddBtn" type="button" style="display:block; margin-bottom:10px;">✏️ Agregar manualmente</button>
     <div class="food-results" id="foodResults"></div>
+    <div id="manualPanel" hidden>
+      <div class="settings-row">
+        <label>Nombre del alimento</label>
+        <input type="text" class="field-input" id="manualName" placeholder="Ej: Cazuela casera">
+      </div>
+      <div class="food-qty-row">
+        <label style="font-size:13px; color:var(--muted); margin-bottom:0;">Cantidad (g, opcional)</label>
+        <input type="number" inputmode="numeric" class="field-input" id="manualGrams" placeholder="100">
+      </div>
+      <div class="food-qty-row">
+        <label style="font-size:13px; color:var(--muted); margin-bottom:0;">Calorías</label>
+        <input type="number" inputmode="numeric" class="field-input" id="manualKcal" value="0">
+      </div>
+      <div class="food-qty-row">
+        <label style="font-size:13px; color:var(--muted); margin-bottom:0;">Proteína (g)</label>
+        <input type="number" inputmode="numeric" class="field-input" id="manualProtein" value="0">
+      </div>
+      <div class="food-qty-row">
+        <label style="font-size:13px; color:var(--muted); margin-bottom:0;">Carbohidratos (g)</label>
+        <input type="number" inputmode="numeric" class="field-input" id="manualCarbs" value="0">
+      </div>
+      <div class="food-qty-row">
+        <label style="font-size:13px; color:var(--muted); margin-bottom:0;">Grasas (g)</label>
+        <input type="number" inputmode="numeric" class="field-input" id="manualFat" value="0">
+      </div>
+      <button class="btn-primary" id="manualSave">Agregar</button>
+    </div>
     <div id="foodQtyPanel" hidden>
       <div class="food-item">
         <div>
@@ -1564,6 +1592,8 @@ async function runFoodSearch(query){
 
 function selectFood(food, defaultGrams=100){
   selectedFood = food;
+  $("#manualPanel").hidden = true;
+  $("#foodPhotoPanel").hidden = true;
   $("#foodQtyName").textContent = food.name;
   $("#foodQtySub").textContent = `${Math.round(food.kcal)} kcal · P${food.protein}g C${food.carbs}g G${food.fat}g por 100g`;
   $("#foodQtyGrams").value = defaultGrams;
@@ -1578,6 +1608,7 @@ function openFoodModal(meal){
   $("#foodResults").innerHTML = "";
   $("#foodQtyPanel").hidden = true;
   $("#foodPhotoPanel").hidden = true;
+  $("#manualPanel").hidden = true;
   $("#foodModal").hidden = false;
   document.body.style.overflow = "hidden";
   setTimeout(()=> $("#foodSearchInput").focus(), 50);
@@ -1826,12 +1857,49 @@ function resizeImageToBase64(file, maxDim=1024, quality=0.8){
 $("#foodPhotoBtn").addEventListener("click", ()=> $("#foodPhotoInput").click());
 $("#foodGalleryBtn").addEventListener("click", ()=> $("#foodGalleryInput").click());
 
+$("#manualAddBtn").addEventListener("click", ()=>{
+  $("#foodResults").innerHTML = "";
+  $("#foodQtyPanel").hidden = true;
+  $("#foodPhotoPanel").hidden = true;
+  $("#manualName").value = "";
+  $("#manualGrams").value = "";
+  $("#manualKcal").value = "0";
+  $("#manualProtein").value = "0";
+  $("#manualCarbs").value = "0";
+  $("#manualFat").value = "0";
+  $("#manualPanel").hidden = false;
+  setTimeout(()=> $("#manualName").focus(), 50);
+});
+
+$("#manualSave").addEventListener("click", async ()=>{
+  const name = $("#manualName").value.trim();
+  if(!name){ toast("Ingresa el nombre del alimento"); return; }
+  const entry = {
+    date: todayISO(), meal: currentMeal, name,
+    grams: parseFloat($("#manualGrams").value) || 0,
+    kcal: parseFloat($("#manualKcal").value) || 0,
+    protein: parseFloat($("#manualProtein").value) || 0,
+    carbs: parseFloat($("#manualCarbs").value) || 0,
+    fat: parseFloat($("#manualFat").value) || 0,
+    source: "manual",
+  };
+  try{
+    await api("/api/food-logs", {method:"POST", body: JSON.stringify(entry)});
+    toast("Alimento agregado");
+    closeFoodModal();
+    renderNutricion();
+  }catch(e){
+    toast("No se pudo guardar");
+  }
+});
+
 async function handleFoodPhotoFile(e){
   const file = e.target.files[0];
   e.target.value = "";
   if(!file) return;
   $("#foodQtyPanel").hidden = true;
   $("#foodPhotoPanel").hidden = true;
+  $("#manualPanel").hidden = true;
   $("#foodResults").innerHTML = `<p class="empty">Analizando foto…</p>`;
   try{
     const base64 = await resizeImageToBase64(file);
