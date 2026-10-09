@@ -181,6 +181,77 @@ export default {
         return json(results);
       }
 
+      if (pathname === "/api/food-photo" && request.method === "POST") {
+        if (!env.ANTHROPIC_API_KEY) {
+          return json({ error: "Falta configurar ANTHROPIC_API_KEY en el Worker" }, 500);
+        }
+        const body = await request.json();
+        if (!body.image) return json({ error: "Falta image" }, 400);
+
+        const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: {
+            "x-api-key": env.ANTHROPIC_API_KEY,
+            "anthropic-version": "2023-06-01",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "claude-haiku-4-5-20251001",
+            max_tokens: 400,
+            messages: [
+              {
+                role: "user",
+                content: [
+                  {
+                    type: "image",
+                    source: {
+                      type: "base64",
+                      media_type: body.mediaType || "image/jpeg",
+                      data: body.image,
+                    },
+                  },
+                  {
+                    type: "text",
+                    text:
+                      "Identifica el plato de comida en la foto y estima sus macronutrientes " +
+                      "totales para TODA la porción visible (no por 100g). Responde SOLO con un " +
+                      "JSON válido, sin texto adicional ni explicación, con este formato exacto: " +
+                      '{"alimento":"nombre corto del plato","porcion_g":numero,"kcal":numero,' +
+                      '"protein":numero,"carbs":numero,"fat":numero}',
+                  },
+                ],
+              },
+            ],
+          }),
+        });
+
+        if (!aiRes.ok) {
+          const errText = await aiRes.text();
+          return json({ error: "Error de la IA: " + errText }, 502);
+        }
+        const aiData = await aiRes.json();
+        const text = aiData.content?.[0]?.text || "";
+        const match = text.match(/\{[\s\S]*\}/);
+        if (!match) return json({ error: "No se pudo interpretar la respuesta de la IA" }, 502);
+
+        let parsed;
+        try {
+          parsed = JSON.parse(match[0]);
+        } catch (e) {
+          return json({ error: "JSON inválido de la IA" }, 502);
+        }
+
+        return json({
+          name: parsed.alimento || "Alimento (foto)",
+          grams: parsed.porcion_g || 100,
+          kcal: parsed.kcal || 0,
+          protein: parsed.protein || 0,
+          carbs: parsed.carbs || 0,
+          fat: parsed.fat || 0,
+          source: "foto-ia",
+        });
+      }
+
       return json({ error: "Not found" }, 404);
     } catch (err) {
       return json({ error: String(err) }, 500);

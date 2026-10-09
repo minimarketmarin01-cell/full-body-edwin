@@ -433,6 +433,8 @@ nav.bottom svg{width:20px; height:20px;}
     </button>
     <h3 class="technique-title" id="foodModalTitle">Agregar alimento</h3>
     <input type="text" class="food-search-input" id="foodSearchInput" placeholder="Buscar alimento (ej: arroz, pollo, palta)">
+    <button class="btn-secondary" id="foodPhotoBtn" type="button">📷 Agregar con foto (IA)</button>
+    <input type="file" accept="image/*" capture="environment" id="foodPhotoInput" hidden>
     <div class="food-results" id="foodResults"></div>
     <div id="foodQtyPanel" hidden>
       <div class="food-item">
@@ -446,6 +448,35 @@ nav.bottom svg{width:20px; height:20px;}
         <input type="number" inputmode="numeric" class="field-input" id="foodQtyGrams" value="100">
       </div>
       <button class="btn-primary" id="foodQtySave">Agregar</button>
+    </div>
+    <div id="foodPhotoPanel" hidden>
+      <div class="food-item">
+        <div>
+          <div class="food-item-name" id="photoFoodName"></div>
+          <div class="food-item-sub">Estimación de la IA — ajusta si hace falta antes de guardar</div>
+        </div>
+      </div>
+      <div class="food-qty-row">
+        <label style="font-size:13px; color:var(--muted); margin-bottom:0;">Porción aprox. (g)</label>
+        <input type="number" inputmode="numeric" class="field-input" id="photoGrams">
+      </div>
+      <div class="food-qty-row">
+        <label style="font-size:13px; color:var(--muted); margin-bottom:0;">Calorías</label>
+        <input type="number" inputmode="numeric" class="field-input" id="photoKcal">
+      </div>
+      <div class="food-qty-row">
+        <label style="font-size:13px; color:var(--muted); margin-bottom:0;">Proteína (g)</label>
+        <input type="number" inputmode="numeric" class="field-input" id="photoProtein">
+      </div>
+      <div class="food-qty-row">
+        <label style="font-size:13px; color:var(--muted); margin-bottom:0;">Carbohidratos (g)</label>
+        <input type="number" inputmode="numeric" class="field-input" id="photoCarbs">
+      </div>
+      <div class="food-qty-row">
+        <label style="font-size:13px; color:var(--muted); margin-bottom:0;">Grasas (g)</label>
+        <input type="number" inputmode="numeric" class="field-input" id="photoFat">
+      </div>
+      <button class="btn-primary" id="photoSave">Agregar</button>
     </div>
   </div>
 </div>
@@ -1520,6 +1551,7 @@ function openFoodModal(meal){
   $("#foodSearchInput").value = "";
   $("#foodResults").innerHTML = "";
   $("#foodQtyPanel").hidden = true;
+  $("#foodPhotoPanel").hidden = true;
   $("#foodModal").hidden = false;
   document.body.style.overflow = "hidden";
   setTimeout(()=> $("#foodSearchInput").focus(), 50);
@@ -1735,6 +1767,80 @@ $("#foodQtySave").addEventListener("click", async ()=>{
 $("#foodModalClose").addEventListener("click", closeFoodModal);
 $("#foodModal").addEventListener("click", e=>{
   if(e.target.id === "foodModal") closeFoodModal();
+});
+
+function resizeImageToBase64(file, maxDim=1024, quality=0.8){
+  return new Promise((resolve, reject)=>{
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = ()=>{
+      let { width, height } = img;
+      if(width > maxDim || height > maxDim){
+        const scale = maxDim / Math.max(width, height);
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width; canvas.height = height;
+      canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(blob=>{
+        if(!blob){ reject(new Error("No se pudo procesar la imagen")); return; }
+        const reader = new FileReader();
+        reader.onload = ()=> resolve(reader.result.split(",")[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      }, "image/jpeg", quality);
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
+$("#foodPhotoBtn").addEventListener("click", ()=> $("#foodPhotoInput").click());
+
+$("#foodPhotoInput").addEventListener("change", async (e)=>{
+  const file = e.target.files[0];
+  e.target.value = "";
+  if(!file) return;
+  $("#foodQtyPanel").hidden = true;
+  $("#foodPhotoPanel").hidden = true;
+  $("#foodResults").innerHTML = `<p class="empty">Analizando foto…</p>`;
+  try{
+    const base64 = await resizeImageToBase64(file);
+    const data = await api("/api/food-photo", {method:"POST", body: JSON.stringify({image: base64, mediaType: "image/jpeg"})});
+    $("#foodResults").innerHTML = "";
+    $("#photoFoodName").textContent = data.name;
+    $("#photoGrams").value = Math.round(data.grams || 0);
+    $("#photoKcal").value = Math.round(data.kcal || 0);
+    $("#photoProtein").value = Math.round(data.protein || 0);
+    $("#photoCarbs").value = Math.round(data.carbs || 0);
+    $("#photoFat").value = Math.round(data.fat || 0);
+    $("#foodPhotoPanel").hidden = false;
+  }catch(err){
+    $("#foodResults").innerHTML = `<p class="empty">No se pudo analizar la foto. Intenta de nuevo o agrégalo manual.</p>`;
+  }
+});
+
+$("#photoSave").addEventListener("click", async ()=>{
+  const entry = {
+    date: todayISO(), meal: currentMeal,
+    name: $("#photoFoodName").textContent || "Alimento (foto)",
+    grams: parseFloat($("#photoGrams").value) || 0,
+    kcal: parseFloat($("#photoKcal").value) || 0,
+    protein: parseFloat($("#photoProtein").value) || 0,
+    carbs: parseFloat($("#photoCarbs").value) || 0,
+    fat: parseFloat($("#photoFat").value) || 0,
+    source: "foto-ia",
+  };
+  try{
+    await api("/api/food-logs", {method:"POST", body: JSON.stringify(entry)});
+    toast("Alimento agregado");
+    closeFoodModal();
+    renderNutricion();
+  }catch(e){
+    toast("No se pudo guardar");
+  }
 });
 
 $("#profSave").addEventListener("click", async ()=>{
