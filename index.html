@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="theme-color" content="#171A1C">
 <link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -276,6 +276,8 @@ nav.bottom svg{width:20px; height:20px;}
 .food-item-sub{font-size:12px; color:var(--muted); margin-top:2px;}
 .food-item-del{background:none; border:none; color:var(--muted); cursor:pointer; padding:4px; flex-shrink:0;}
 .food-item-del svg{width:16px; height:16px; display:block;}
+.food-photo-row{display:flex; gap:8px; margin-bottom:10px;}
+.food-photo-row .btn-secondary{margin-top:0;}
 .food-search-input{
   width:100%; border:1px solid var(--line); background:var(--bg); color:var(--ink);
   border-radius:10px; padding:11px; font-size:15px; font-family:Inter; margin-bottom:10px;
@@ -433,8 +435,12 @@ nav.bottom svg{width:20px; height:20px;}
     </button>
     <h3 class="technique-title" id="foodModalTitle">Agregar alimento</h3>
     <input type="text" class="food-search-input" id="foodSearchInput" placeholder="Buscar alimento (ej: arroz, pollo, palta)">
-    <button class="btn-secondary" id="foodPhotoBtn" type="button">📷 Agregar con foto (IA)</button>
+    <div class="food-photo-row">
+      <button class="btn-secondary" id="foodPhotoBtn" type="button">📷 Tomar foto</button>
+      <button class="btn-secondary" id="foodGalleryBtn" type="button">🖼️ Elegir imagen</button>
+    </div>
     <input type="file" accept="image/*" capture="environment" id="foodPhotoInput" hidden>
+    <input type="file" accept="image/*" id="foodGalleryInput" hidden>
     <div class="food-results" id="foodResults"></div>
     <div id="foodQtyPanel" hidden>
       <div class="food-item">
@@ -1798,8 +1804,9 @@ function resizeImageToBase64(file, maxDim=1024, quality=0.8){
 }
 
 $("#foodPhotoBtn").addEventListener("click", ()=> $("#foodPhotoInput").click());
+$("#foodGalleryBtn").addEventListener("click", ()=> $("#foodGalleryInput").click());
 
-$("#foodPhotoInput").addEventListener("change", async (e)=>{
+async function handleFoodPhotoFile(e){
   const file = e.target.files[0];
   e.target.value = "";
   if(!file) return;
@@ -1820,7 +1827,10 @@ $("#foodPhotoInput").addEventListener("change", async (e)=>{
   }catch(err){
     $("#foodResults").innerHTML = `<p class="empty">No se pudo analizar la foto. Intenta de nuevo o agrégalo manual.</p>`;
   }
-});
+}
+
+$("#foodPhotoInput").addEventListener("change", handleFoodPhotoFile);
+$("#foodGalleryInput").addEventListener("change", handleFoodPhotoFile);
 
 $("#photoSave").addEventListener("click", async ()=>{
   const entry = {
