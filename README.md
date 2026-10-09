@@ -60,14 +60,17 @@ La URL queda guardada en el celular (localStorage), no hay que repetirlo cada ve
 ## Uso
 
 - **Hoy**: elige sesión A/B/C, registra peso y reps por serie. Cada serie se guarda al toque de "Ok". Si ya entrenaste ese día, los datos se recargan solos.
-- **Nutrición**: calorías/proteína/carbos/grasas del día vs. metas calculadas automáticamente (Mifflin-St Jeor + reparto de macros para hipertrofia, a partir del perfil en Ajustes). Buscador de alimentos: primero una base local de ~38 alimentos comunes (instantánea, sin red), y si no aparece, resultados en vivo de Open Food Facts vía el Worker. También se puede agregar sacando una foto del plato: una IA (Claude, vía la API de Anthropic) estima el alimento y sus macros, editables antes de guardar.
+- **Nutrición**: calorías/proteína/carbos/grasas del día vs. metas calculadas automáticamente (Mifflin-St Jeor + reparto de macros para hipertrofia, a partir del perfil en Ajustes). Buscador de alimentos: primero una base local de ~38 alimentos comunes (instantánea, sin red), y si no aparece, resultados en vivo de Open Food Facts vía el Worker. También se puede agregar sacando una foto del plato: una IA (Google Gemini, tier gratis) estima el alimento y sus macros, editables antes de guardar.
 
-### Activar "Agregar con foto"
+### Activar "Agregar con foto" (gratis)
 
-Requiere una API key de Anthropic (console.anthropic.com → API Keys), que se agrega como **secreto** del Worker (nunca en el frontend/GitHub):
+Requiere una API key gratuita de Google AI Studio (no pide tarjeta de crédito, uso personal queda muy por debajo del límite gratis):
 
-1. Cloudflare dashboard → tu Worker `fullbody-edwin-api` → pestaña **Settings** → **Variables and Secrets**.
-2. **Add variable** → tipo **Secret** (encriptado) → nombre exacto `ANTHROPIC_API_KEY` → pega la key → **Save and deploy**.
+1. Ve a **aistudio.google.com/apikey** e inicia sesión con una cuenta Google.
+2. **Create API key** → **Create API key in new project**.
+3. Copia la key (empieza con `AIza...`).
+4. En el Cloudflare dashboard → tu Worker `fullbody-edwin-api` → pestaña **Settings** → **Variables and Secrets**.
+5. **Add variable** → tipo **Secret** (encriptado) → nombre exacto `GEMINI_API_KEY` → pega la key → **Save and deploy**.
 
 Sin ese secreto configurado, el botón "📷 Agregar con foto" muestra un error — el resto de la app sigue funcionando normal.
 - **Historial**: progresión de carga por ejercicio (barras + tabla).
