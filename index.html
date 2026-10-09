@@ -279,6 +279,7 @@ nav.bottom svg{width:20px; height:20px;}
 .food-item-del svg{width:16px; height:16px; display:block;}
 .food-photo-row{display:flex; gap:8px; margin-bottom:10px;}
 .food-photo-row .btn-secondary{margin-top:0;}
+.food-photo-hint{font-size:11.5px; color:var(--muted); margin:-4px 0 10px; text-align:center;}
 .food-search-input{
   width:100%; border:1px solid var(--line); background:var(--bg); color:var(--ink);
   border-radius:10px; padding:11px; font-size:15px; font-family:Inter; margin-bottom:10px;
@@ -440,6 +441,7 @@ nav.bottom svg{width:20px; height:20px;}
       <button class="btn-secondary" id="foodPhotoBtn" type="button">📷 Tomar foto</button>
       <button class="btn-secondary" id="foodGalleryBtn" type="button">🖼️ Elegir imagen</button>
     </div>
+    <p class="food-photo-hint">Sirve para una foto del plato, o la tabla nutricional de un envase</p>
     <input type="file" accept="image/*" capture="environment" id="foodPhotoInput" hidden>
     <input type="file" accept="image/*" id="foodGalleryInput" hidden>
     <div class="food-results" id="foodResults"></div>
@@ -1560,11 +1562,11 @@ async function runFoodSearch(query){
   });
 }
 
-function selectFood(food){
+function selectFood(food, defaultGrams=100){
   selectedFood = food;
   $("#foodQtyName").textContent = food.name;
   $("#foodQtySub").textContent = `${Math.round(food.kcal)} kcal · P${food.protein}g C${food.carbs}g G${food.fat}g por 100g`;
-  $("#foodQtyGrams").value = 100;
+  $("#foodQtyGrams").value = defaultGrams;
   $("#foodQtyPanel").hidden = false;
 }
 
@@ -1835,13 +1837,22 @@ async function handleFoodPhotoFile(e){
     const base64 = await resizeImageToBase64(file);
     const data = await api("/api/food-photo", {method:"POST", body: JSON.stringify({image: base64, mediaType: "image/jpeg"})});
     $("#foodResults").innerHTML = "";
-    $("#photoFoodName").textContent = data.name;
-    $("#photoGrams").value = Math.round(data.grams || 0);
-    $("#photoKcal").value = Math.round(data.kcal || 0);
-    $("#photoProtein").value = Math.round(data.protein || 0);
-    $("#photoCarbs").value = Math.round(data.carbs || 0);
-    $("#photoFat").value = Math.round(data.fat || 0);
-    $("#foodPhotoPanel").hidden = false;
+    if(data.tipo === "etiqueta"){
+      // Envase con tabla nutricional: los valores son por 100g, se reusa
+      // el mismo flujo del buscador (escala con los gramos que comas).
+      selectFood(
+        {name: data.name, kcal: data.kcal, protein: data.protein, carbs: data.carbs, fat: data.fat, source: "foto-ia"},
+        Math.round(data.grams || 100)
+      );
+    } else {
+      $("#photoFoodName").textContent = data.name;
+      $("#photoGrams").value = Math.round(data.grams || 0);
+      $("#photoKcal").value = Math.round(data.kcal || 0);
+      $("#photoProtein").value = Math.round(data.protein || 0);
+      $("#photoCarbs").value = Math.round(data.carbs || 0);
+      $("#photoFat").value = Math.round(data.fat || 0);
+      $("#foodPhotoPanel").hidden = false;
+    }
   }catch(err){
     $("#foodResults").innerHTML = `<p class="empty">No se pudo analizar la foto: ${err.message || err}</p>`;
   }

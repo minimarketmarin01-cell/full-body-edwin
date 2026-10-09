@@ -189,11 +189,23 @@ export default {
         if (!body.image) return json({ error: "Falta image" }, 400);
 
         const prompt =
-          "Identifica el plato de comida en la foto y estima sus macronutrientes " +
-          "totales para TODA la porción visible (no por 100g). Responde SOLO con un " +
-          "JSON válido, sin texto adicional ni explicación, con este formato exacto: " +
-          '{"alimento":"nombre corto del plato","porcion_g":numero,"kcal":numero,' +
-          '"protein":numero,"carbs":numero,"fat":numero}';
+          "Analiza la imagen. Puede ser (A) un plato de comida preparada, o (B) el " +
+          "envase/etiqueta de un producto con una tabla de información nutricional " +
+          "impresa (ej: 'Información Nutricional', 'Nutrition Facts'). " +
+          "Si es (A): identifica el plato y estima sus macronutrientes TOTALES para " +
+          "toda la porción visible. " +
+          "Si es (B): lee los valores EXACTOS impresos en la tabla, usando la columna " +
+          "'por 100g' o 'por 100ml' si existe; si la tabla solo trae una columna de " +
+          "'1 porción', usa esos valores y asume que porcion_g es el tamaño en gramos " +
+          "de esa porción (ej: si dice 'Porción: 1 sobre (12g)', porcion_g=12). " +
+          "Responde SOLO con un JSON válido, sin texto adicional ni explicación, con " +
+          "este formato exacto: " +
+          '{"tipo":"plato" o "etiqueta","alimento":"nombre corto","porcion_g":numero,' +
+          '"kcal":numero,"protein":numero,"carbs":numero,"fat":numero}. ' +
+          'Para "plato", kcal/protein/carbs/fat son el TOTAL de la porción visible. ' +
+          'Para "etiqueta", son los valores POR 100g/100ml de la tabla (no multipliques ' +
+          "por la porción), y porcion_g es el tamaño de la porción declarada en el " +
+          "envase, solo como referencia de cuánto se suele comer de una vez.";
 
         const aiRes = await fetch(
           "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=" +
@@ -236,6 +248,7 @@ export default {
         }
 
         return json({
+          tipo: parsed.tipo === "etiqueta" ? "etiqueta" : "plato",
           name: parsed.alimento || "Alimento (foto)",
           grams: parsed.porcion_g || 100,
           kcal: parsed.kcal || 0,
