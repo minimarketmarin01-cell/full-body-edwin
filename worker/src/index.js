@@ -194,18 +194,20 @@ export default {
           "impresa (ej: 'Información Nutricional', 'Nutrition Facts'). " +
           "Si es (A): identifica el plato y estima sus macronutrientes TOTALES para " +
           "toda la porción visible. " +
-          "Si es (B): lee los valores EXACTOS impresos en la tabla, usando la columna " +
-          "'por 100g' o 'por 100ml' si existe; si la tabla solo trae una columna de " +
-          "'1 porción', usa esos valores y asume que porcion_g es el tamaño en gramos " +
-          "de esa porción (ej: si dice 'Porción: 1 sobre (12g)', porcion_g=12). " +
+          "Si es (B): la tabla normalmente tiene dos columnas, una 'por 100g/100ml' y " +
+          "otra '1 porción' (a veces con el tamaño entre paréntesis, ej: 'Porción: 1 " +
+          "sobre (12g)' o 'Porción: 2 unidades (65g)'). IGNORA la columna de 100g y " +
+          "lee ÚNICAMENTE los números de la columna '1 porción' tal como están " +
+          "impresos, sin hacer ningún cálculo ni conversión. porcion_g es el tamaño " +
+          "de esa porción en gramos, leído del paréntesis junto a 'Porción:'. Si la " +
+          "tabla solo tiene una columna (sin 'por porción'), usa esos valores y " +
+          "porcion_g=100. " +
           "Responde SOLO con un JSON válido, sin texto adicional ni explicación, con " +
           "este formato exacto: " +
           '{"tipo":"plato" o "etiqueta","alimento":"nombre corto","porcion_g":numero,' +
           '"kcal":numero,"protein":numero,"carbs":numero,"fat":numero}. ' +
-          'Para "plato", kcal/protein/carbs/fat son el TOTAL de la porción visible. ' +
-          'Para "etiqueta", son los valores POR 100g/100ml de la tabla (no multipliques ' +
-          "por la porción), y porcion_g es el tamaño de la porción declarada en el " +
-          "envase, solo como referencia de cuánto se suele comer de una vez.";
+          "En ambos casos (A y B), kcal/protein/carbs/fat son el TOTAL para " +
+          "porcion_g gramos — nunca por 100g.";
 
         const geminiUrl =
           "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=" +

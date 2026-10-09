@@ -490,7 +490,7 @@ nav.bottom svg{width:20px; height:20px;}
       <div class="food-item">
         <div>
           <div class="food-item-name" id="photoFoodName"></div>
-          <div class="food-item-sub">Estimación de la IA — ajusta si hace falta antes de guardar</div>
+          <div class="food-item-sub" id="photoFoodSub">Estimación de la IA — ajusta si hace falta antes de guardar</div>
         </div>
       </div>
       <div class="food-qty-row">
@@ -1905,22 +1905,16 @@ async function handleFoodPhotoFile(e){
     const base64 = await resizeImageToBase64(file);
     const data = await api("/api/food-photo", {method:"POST", body: JSON.stringify({image: base64, mediaType: "image/jpeg"})});
     $("#foodResults").innerHTML = "";
-    if(data.tipo === "etiqueta"){
-      // Envase con tabla nutricional: los valores son por 100g, se reusa
-      // el mismo flujo del buscador (escala con los gramos que comas).
-      selectFood(
-        {name: data.name, kcal: data.kcal, protein: data.protein, carbs: data.carbs, fat: data.fat, source: "foto-ia"},
-        Math.round(data.grams || 100)
-      );
-    } else {
-      $("#photoFoodName").textContent = data.name;
-      $("#photoGrams").value = Math.round(data.grams || 0);
-      $("#photoKcal").value = Math.round(data.kcal || 0);
-      $("#photoProtein").value = Math.round(data.protein || 0);
-      $("#photoCarbs").value = Math.round(data.carbs || 0);
-      $("#photoFat").value = Math.round(data.fat || 0);
-      $("#foodPhotoPanel").hidden = false;
-    }
+    $("#photoFoodSub").textContent = data.tipo === "etiqueta"
+      ? "Leído de la etiqueta — ajusta si comes más o menos de 1 porción"
+      : "Estimación de la IA — ajusta si hace falta antes de guardar";
+    $("#photoFoodName").textContent = data.name;
+    $("#photoGrams").value = Math.round(data.grams || 0);
+    $("#photoKcal").value = Math.round(data.kcal || 0);
+    $("#photoProtein").value = Math.round(data.protein || 0);
+    $("#photoCarbs").value = Math.round(data.carbs || 0);
+    $("#photoFat").value = Math.round(data.fat || 0);
+    $("#foodPhotoPanel").hidden = false;
   }catch(err){
     $("#foodResults").innerHTML = `<p class="empty">No se pudo analizar la foto: ${err.message || err}</p>`;
   }
