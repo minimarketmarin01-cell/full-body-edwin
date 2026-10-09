@@ -13,7 +13,9 @@ full-body-edwin/
 └── worker/            # Backend (Cloudflare Worker + D1)
     ├── wrangler.toml
     ├── src/index.js
-    └── migrations/0001_init.sql
+    └── migrations/
+        ├── 0001_init.sql
+        └── 0002_nutrition.sql
 ```
 
 ## 1. Frontend (GitHub Pages)
@@ -41,7 +43,10 @@ Si prefieres usar tu propia base D1 en vez de la ya creada, créala y actualiza 
 
 ```bash
 wrangler d1 execute fullbody-edwin --remote --file=migrations/0001_init.sql
+wrangler d1 execute fullbody-edwin --remote --file=migrations/0002_nutrition.sql
 ```
+
+También puedes pegar el contenido de cada archivo `.sql` directamente en el **Console** de tu base D1 desde el dashboard de Cloudflare (Workers & Pages → D1 → tu base → Console), sin necesidad de instalar Wrangler.
 
 ## 3. Conectar la app con la API
 
@@ -55,9 +60,10 @@ La URL queda guardada en el celular (localStorage), no hay que repetirlo cada ve
 ## Uso
 
 - **Hoy**: elige sesión A/B/C, registra peso y reps por serie. Cada serie se guarda al toque de "Ok". Si ya entrenaste ese día, los datos se recargan solos.
+- **Nutrición**: calorías/proteína/carbos/grasas del día vs. metas calculadas automáticamente (Mifflin-St Jeor + reparto de macros para hipertrofia, a partir del perfil en Ajustes). Buscador de alimentos: primero una base local de ~38 alimentos comunes (instantánea, sin red), y si no aparece, resultados en vivo de Open Food Facts vía el Worker.
 - **Historial**: progresión de carga por ejercicio (barras + tabla).
 - **Volumen**: series semanales objetivo por grupo muscular (según el programa, referencia fija).
-- **Ajustes**: URL de la API.
+- **Ajustes**: URL de la API, notificaciones del descanso, perfil para metas de nutrición.
 
 ## Datos del programa (fuente: Programa_Full_Body_Edwin.xlsx)
 
