@@ -643,7 +643,11 @@ async function api(path, opts){
   const res = await fetch(apiUrl.replace(/\/$/,"") + path, {
     headers:{"Content-Type":"application/json"}, ...opts
   });
-  if(!res.ok) throw new Error("API error " + res.status);
+  if(!res.ok){
+    let detail = "";
+    try{ detail = (await res.json()).error || ""; }catch(e){}
+    throw new Error(detail || ("API error " + res.status));
+  }
   return res.json();
 }
 
@@ -1825,7 +1829,7 @@ async function handleFoodPhotoFile(e){
     $("#photoFat").value = Math.round(data.fat || 0);
     $("#foodPhotoPanel").hidden = false;
   }catch(err){
-    $("#foodResults").innerHTML = `<p class="empty">No se pudo analizar la foto. Intenta de nuevo o agrégalo manual.</p>`;
+    $("#foodResults").innerHTML = `<p class="empty">No se pudo analizar la foto: ${err.message || err}</p>`;
   }
 }
 
