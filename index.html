@@ -270,6 +270,7 @@ nav.bottom svg{width:20px; height:20px;}
   letter-spacing:.03em; margin:18px 0 6px; display:flex; justify-content:space-between; align-items:center;
 }
 .meal-add{background:none; border:none; color:var(--accent); font-weight:700; font-size:13px; cursor:pointer; padding:0; font-family:Inter;}
+.meal-suggestion{font-size:12.5px; color:var(--muted); font-style:italic; padding:8px 0; margin:0;}
 .food-item{display:flex; justify-content:space-between; align-items:center; gap:8px; padding:10px 0; border-bottom:1px solid var(--line);}
 .food-item:last-child{border-bottom:none;}
 .food-item-name{font-weight:600; font-size:14px;}
@@ -1439,6 +1440,19 @@ const MEALS = [
   {key:"cena", label:"Cena"},
   {key:"snack", label:"Snacks"},
 ];
+
+/*
+ * Sugerencias orientativas por comida (objetivo hipertrofia: proteína
+ * repartida en las 4 comidas, carbos más grandes cerca del entreno,
+ * grasa liviana en la noche). No son prescriptivas ni se guardan en
+ * la base: solo texto de referencia mientras la comida está vacía.
+ */
+const MEAL_SUGGESTIONS = {
+  desayuno: "Huevo, avena y leche entera",
+  almuerzo: "Pollo o posta, arroz y ensalada",
+  snack: "Yogur griego, plátano y almendras",
+  cena: "Salmón o posta magra, quinoa y verduras",
+};
 let currentMeal = "desayuno";
 let selectedFood = null;
 let foodSearchTimer = null;
@@ -1491,7 +1505,7 @@ async function renderNutricion(){
         <button class="food-item-del" data-del="${l.id}" aria-label="Eliminar">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
-      </div>`).join("") : `<p class="empty" style="padding:8px 0;">Sin registros</p>`;
+      </div>`).join("") : `<p class="meal-suggestion">Sugerencia: ${MEAL_SUGGESTIONS[m.key] || ""}</p>`;
     return `<div class="meal-title">${m.label}<button class="meal-add" data-meal="${m.key}">+ Agregar</button></div>${itemsHtml}`;
   }).join("");
 
