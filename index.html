@@ -257,6 +257,14 @@ nav.bottom svg{width:20px; height:20px;}
 .settings-row label{display:block; font-size:12.5px; color:var(--muted); margin-bottom:5px; font-weight:600;}
 .status-dot{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px;}
 .status-line{font-size:13px; color:var(--muted); margin-top:10px;}
+.date-nav{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:14px;}
+.date-nav button{
+  background:var(--chip-bg); border:none; border-radius:10px; width:36px; height:36px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; color:var(--ink); cursor:pointer;
+}
+.date-nav button:disabled{opacity:.35; cursor:default;}
+.date-nav button svg{width:18px; height:18px;}
+.date-nav-label{font-family:Manrope; font-weight:800; font-size:15px; text-align:center; flex:1; text-transform:capitalize;}
 .macro-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:8px;}
 .macro-tile{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px;}
 .macro-tile .macro-label{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; color:var(--muted);}
@@ -316,6 +324,15 @@ nav.bottom svg{width:20px; height:20px;}
   </section>
 
   <section class="view" id="view-nutricion">
+    <div class="date-nav">
+      <button type="button" id="nutriPrevDay" aria-label="Día anterior">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div class="date-nav-label" id="nutriDateLabel">Hoy</div>
+      <button type="button" id="nutriNextDay" aria-label="Día siguiente">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+    </div>
     <div class="macro-grid" id="macroGrid"></div>
     <div id="mealsBody"></div>
   </section>
@@ -660,7 +677,13 @@ const $$ = (sel, root=document) => [...root.querySelectorAll(sel)];
 const DEFAULT_API_URL = "https://fullbody-edwin-api.minimarketmarin01.workers.dev";
 let apiUrl = localStorage.getItem("fbe_api_url") || DEFAULT_API_URL;
 let currentSession = localStorage.getItem("fbe_session") || "A";
-const todayISO = () => new Date().toISOString().slice(0,10);
+const todayISO = () => {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
 
 function toast(msg){
   const t = $("#toast");
@@ -1486,6 +1509,24 @@ const MEAL_SUGGESTIONS = {
 let currentMeal = "desayuno";
 let selectedFood = null;
 let foodSearchTimer = null;
+let nutritionDate = todayISO();
+
+function formatNutritionDateLabel(dateStr){
+  const days = daysSince(dateStr);
+  if(days === 0) return "Hoy";
+  if(days === 1) return "Ayer";
+  const d = new Date(dateStr + "T00:00:00");
+  return d.toLocaleDateString("es-CL", {weekday:"long", day:"numeric", month:"long"});
+}
+
+function shiftNutritionDate(deltaDays){
+  const d = new Date(nutritionDate + "T00:00:00");
+  d.setDate(d.getDate() + deltaDays);
+  const newDate = d.toISOString().slice(0,10);
+  if(newDate > todayISO()) return;
+  nutritionDate = newDate;
+  renderNutricion();
+}
 
 function sumMacros(logs){
   return logs.reduce((acc,l)=>({
@@ -1509,13 +1550,15 @@ function macroTile(label, value, target, unit){
 async function renderNutricion(){
   const grid = $("#macroGrid");
   const body = $("#mealsBody");
+  $("#nutriDateLabel").textContent = formatNutritionDateLabel(nutritionDate);
+  $("#nutriNextDay").disabled = nutritionDate >= todayISO();
   if(!targets){
     grid.innerHTML = "";
     body.innerHTML = `<p class="empty">Configura tu perfil en Ajustes para calcular tus metas diarias.</p>`;
     return;
   }
   let logsToday = [];
-  try{ logsToday = await api(`/api/food-logs?date=${todayISO()}`); }catch(e){}
+  try{ logsToday = await api(`/api/food-logs?date=${nutritionDate}`); }catch(e){}
 
   const totals = sumMacros(logsToday);
   grid.innerHTML =
@@ -1603,7 +1646,8 @@ function selectFood(food, defaultGrams=100){
 function openFoodModal(meal){
   currentMeal = meal;
   selectedFood = null;
-  $("#foodModalTitle").textContent = `Agregar a ${MEALS.find(m => m.key === meal).label}`;
+  const dateNote = nutritionDate === todayISO() ? "" : ` (${formatNutritionDateLabel(nutritionDate)})`;
+  $("#foodModalTitle").textContent = `Agregar a ${MEALS.find(m => m.key === meal).label}${dateNote}`;
   $("#foodSearchInput").value = "";
   $("#foodResults").innerHTML = "";
   $("#foodQtyPanel").hidden = true;
@@ -1783,6 +1827,9 @@ $("#restTimerAdd").addEventListener("click", ()=>{
 });
 $("#restTimerSkip").addEventListener("click", stopRestTimer);
 
+$("#nutriPrevDay").addEventListener("click", ()=> shiftNutritionDate(-1));
+$("#nutriNextDay").addEventListener("click", ()=> shiftNutritionDate(1));
+
 $("#enableNotifications").addEventListener("click", ()=>{
   if(typeof Notification === "undefined") return;
   if(Notification.permission === "default"){
@@ -1804,7 +1851,7 @@ $("#foodQtySave").addEventListener("click", async ()=>{
   if(grams <= 0){ toast("Ingresa una cantidad válida"); return; }
   const factor = grams / 100;
   const entry = {
-    date: todayISO(), meal: currentMeal, name: selectedFood.name, grams,
+    date: nutritionDate, meal: currentMeal, name: selectedFood.name, grams,
     kcal: Math.round(selectedFood.kcal * factor),
     protein: Math.round(selectedFood.protein * factor * 10) / 10,
     carbs: Math.round(selectedFood.carbs * factor * 10) / 10,
@@ -1875,7 +1922,7 @@ $("#manualSave").addEventListener("click", async ()=>{
   const name = $("#manualName").value.trim();
   if(!name){ toast("Ingresa el nombre del alimento"); return; }
   const entry = {
-    date: todayISO(), meal: currentMeal, name,
+    date: nutritionDate, meal: currentMeal, name,
     grams: parseFloat($("#manualGrams").value) || 0,
     kcal: parseFloat($("#manualKcal").value) || 0,
     protein: parseFloat($("#manualProtein").value) || 0,
@@ -1925,7 +1972,7 @@ $("#foodGalleryInput").addEventListener("change", handleFoodPhotoFile);
 
 $("#photoSave").addEventListener("click", async ()=>{
   const entry = {
-    date: todayISO(), meal: currentMeal,
+    date: nutritionDate, meal: currentMeal,
     name: $("#photoFoodName").textContent || "Alimento (foto)",
     grams: parseFloat($("#photoGrams").value) || 0,
     kcal: parseFloat($("#photoKcal").value) || 0,

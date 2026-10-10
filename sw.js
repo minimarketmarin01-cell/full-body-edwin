@@ -1,4 +1,4 @@
-const CACHE = "fullbody-edwin-v34";
+const CACHE = "fullbody-edwin-v35";
 const ASSETS = ["./", "./index.html", "./manifest.json"];
 
 self.addEventListener("install", (e) => {
