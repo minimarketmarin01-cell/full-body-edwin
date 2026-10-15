@@ -205,6 +205,11 @@ th{color:var(--muted); font-weight:600; font-size:12px;}
   display:block; width:100%; aspect-ratio:16/9; height:auto; border:none;
   border-radius:14px; background:var(--muscle-bg);
 }
+.technique-stills{display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:8px;}
+.technique-stills img{
+  display:block; width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:10px;
+  background:var(--chip-bg);
+}
 .technique-yt-link{
   display:inline-block; margin-top:8px; font-size:12.5px; font-weight:600;
   color:var(--muted); text-decoration:none;
@@ -1063,6 +1068,44 @@ function muscleDiagram(item){
  * detalle canal/motivo de cada uno. Si algún video deja de estar disponible
  * para embed, basta con reemplazar su videoId aquí.
  */
+/*
+ * Fotos fijas (inicio/fin del movimiento) por ejercicio, de
+ * free-exercise-db (github.com/yuhonas/free-exercise-db), dominio público
+ * (licencia Unlicense, sin atribución requerida). Se usan como referencia
+ * visual rápida junto al video — no reemplazan al video, lo complementan.
+ */
+const FREE_EXERCISE_DB_IMAGES = {
+  "Sentadilla hack (máquina)": "Hack_Squat",
+  "Press inclinado con barra": "Barbell_Incline_Bench_Press_-_Medium_Grip",
+  "Remo en T-bar o máquina con pecho apoyado": "Lying_T-Bar_Row",
+  "Press Arnold con mancuernas": "Arnold_Dumbbell_Press",
+  "Curl femoral sentado": "Seated_Leg_Curl",
+  "Curl inclinado con mancuernas (banco 45°)": "Incline_Dumbbell_Curl",
+  "Extensión de tríceps sobre la cabeza en polea": "Cable_Rope_Overhead_Triceps_Extension",
+  "Elevación de piernas colgado": "Hanging_Leg_Raise",
+  "Peso muerto rumano con mancuernas": "Stiff-Legged_Dumbbell_Deadlift",
+  "Press plano con mancuernas": "Dumbbell_Bench_Press",
+  "Jalón agarre neutro o dominadas asistidas": "Close-Grip_Front_Lat_Pulldown",
+  "Elevaciones laterales en polea": "Cable_Seated_Lateral_Raise",
+  "Sentadilla búlgara": "Split_Squat_with_Dumbbells",
+  "Press francés con barra Z": "EZ-Bar_Skullcrusher",
+  "Rueda abdominal (ab wheel)": "Ab_Roller",
+  "Prensa de piernas (pies bajos y juntos)": "Narrow_Stance_Leg_Press",
+  "Remo en polea baja agarre neutro": "Seated_Cable_Rows",
+  "Press militar con barra (de pie)": "Standing_Military_Press",
+  "Hip thrust con pausa de 1 s arriba": "Barbell_Hip_Thrust",
+  "Face pull": "Face_Pull",
+  "Curl martillo con cuerda en polea": "Cable_Hammer_Curls_-_Rope_Attachment",
+  "Crunch en polea alta": "Cable_Crunch",
+};
+
+function freeExerciseDbImages(name){
+  const folder = FREE_EXERCISE_DB_IMAGES[name];
+  if(!folder) return null;
+  const base = `https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/${folder}/`;
+  return [base + "0.jpg", base + "1.jpg"];
+}
+
 const TECHNIQUE_VIDEOS = {
   "Sentadilla hack (máquina)": {
     videoId: "UGwJSxjnDmY",
@@ -1332,7 +1375,15 @@ const TECHNIQUE_VIDEOS = {
 
 function openTechniqueModal(name, data){
   $("#techniqueTitle").textContent = name;
+  const stillImages = freeExerciseDbImages(name);
+  const stillsHtml = stillImages ? `
+    <div class="technique-stills">
+      <img src="${stillImages[0]}" alt="${name}: posición inicial" loading="lazy">
+      <img src="${stillImages[1]}" alt="${name}: posición final" loading="lazy">
+    </div>
+  ` : "";
   $("#techniqueAnim").innerHTML = `
+    ${stillsHtml}
     <iframe
       src="https://www.youtube-nocookie.com/embed/${data.videoId}?rel=0"
       title="Técnica: ${name}"

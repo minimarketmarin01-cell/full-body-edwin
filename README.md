@@ -88,3 +88,7 @@ Sin ese secreto configurado, el botón "📷 Agregar con foto" muestra un error 
 Los polígonos SVG del diagrama anatómico ("Músculos trabajados") están portados de
 [react-body-highlighter](https://github.com/giavinh79/react-body-highlighter) (© 2020 GV79,
 licencia MIT).
+
+Las fotos de posición inicial/final en el modal de técnica vienen de
+[free-exercise-db](https://github.com/yuhonas/free-exercise-db) (dominio público,
+licencia Unlicense).
