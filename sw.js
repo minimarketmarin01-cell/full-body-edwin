@@ -1,5 +1,10 @@
-const CACHE = "fullbody-edwin-v38";
-const ASSETS = ["./", "./index.html", "./manifest.json"];
+const CACHE = "fullbody-edwin-v39";
+// Fotogramas de técnica (~1,7 MB): se precargan para que el modal funcione offline.
+const FRAMES = ["./assets/ejercicios/ab-wheel/frame-1.svg", "./assets/ejercicios/ab-wheel/frame-2.svg", "./assets/ejercicios/ab-wheel/frame-3.svg", "./assets/ejercicios/arnold-press/frame-1.svg", "./assets/ejercicios/arnold-press/frame-2.svg", "./assets/ejercicios/arnold-press/frame-3.svg", "./assets/ejercicios/bulgarian-split-squat/frame-1.svg", "./assets/ejercicios/bulgarian-split-squat/frame-2.svg", "./assets/ejercicios/bulgarian-split-squat/frame-3.svg", "./assets/ejercicios/cable-crunch/frame-1.svg", "./assets/ejercicios/cable-crunch/frame-2.svg", "./assets/ejercicios/cable-crunch/frame-3.svg", "./assets/ejercicios/cable-lateral-raise/frame-1.svg", "./assets/ejercicios/cable-lateral-raise/frame-2.svg", "./assets/ejercicios/cable-lateral-raise/frame-3.svg", "./assets/ejercicios/chest-supported-row/frame-1.svg", "./assets/ejercicios/chest-supported-row/frame-2.svg", "./assets/ejercicios/chest-supported-row/frame-3.svg", "./assets/ejercicios/close-grip-lat-pulldown/frame-1.svg", "./assets/ejercicios/close-grip-lat-pulldown/frame-2.svg", "./assets/ejercicios/close-grip-lat-pulldown/frame-3.svg", "./assets/ejercicios/dumbbell-bench-press/frame-1.svg", "./assets/ejercicios/dumbbell-bench-press/frame-2.svg", "./assets/ejercicios/dumbbell-bench-press/frame-3.svg", "./assets/ejercicios/dumbbell-romanian-deadlift/frame-1.svg", "./assets/ejercicios/dumbbell-romanian-deadlift/frame-2.svg", "./assets/ejercicios/dumbbell-romanian-deadlift/frame-3.svg", "./assets/ejercicios/face-pull/frame-1.svg", "./assets/ejercicios/face-pull/frame-2.svg", "./assets/ejercicios/face-pull/frame-3.svg", "./assets/ejercicios/hack-squat/frame-1.svg", "./assets/ejercicios/hack-squat/frame-2.svg", "./assets/ejercicios/hack-squat/frame-3.svg", "./assets/ejercicios/hanging-leg-raise/frame-1.svg", "./assets/ejercicios/hanging-leg-raise/frame-2.svg", "./assets/ejercicios/hanging-leg-raise/frame-3.svg", "./assets/ejercicios/hip-thrust/frame-1.svg", "./assets/ejercicios/hip-thrust/frame-2.svg", "./assets/ejercicios/hip-thrust/frame-3.svg", "./assets/ejercicios/incline-bench-press/frame-1.svg", "./assets/ejercicios/incline-bench-press/frame-2.svg", "./assets/ejercicios/incline-bench-press/frame-3.svg", "./assets/ejercicios/incline-dumbbell-curl/frame-1.svg", "./assets/ejercicios/incline-dumbbell-curl/frame-2.svg", "./assets/ejercicios/incline-dumbbell-curl/frame-3.svg", "./assets/ejercicios/leg-press/frame-1.svg", "./assets/ejercicios/leg-press/frame-2.svg", "./assets/ejercicios/leg-press/frame-3.svg", "./assets/ejercicios/overhead-press/frame-1.svg", "./assets/ejercicios/overhead-press/frame-2.svg", "./assets/ejercicios/overhead-press/frame-3.svg", "./assets/ejercicios/overhead-tricep-extension/frame-1.svg", "./assets/ejercicios/overhead-tricep-extension/frame-2.svg", "./assets/ejercicios/overhead-tricep-extension/frame-3.svg", "./assets/ejercicios/rope-hammer-curl/frame-1.svg", "./assets/ejercicios/rope-hammer-curl/frame-2.svg", "./assets/ejercicios/rope-hammer-curl/frame-3.svg", "./assets/ejercicios/seated-leg-curl/frame-1.svg", "./assets/ejercicios/seated-leg-curl/frame-2.svg", "./assets/ejercicios/seated-leg-curl/frame-3.svg", "./assets/ejercicios/seated-row/frame-1.svg", "./assets/ejercicios/seated-row/frame-2.svg", "./assets/ejercicios/seated-row/frame-3.svg", "./assets/ejercicios/skull-crusher/frame-1.svg", "./assets/ejercicios/skull-crusher/frame-2.svg", "./assets/ejercicios/skull-crusher/frame-3.svg"];
+const ASSETS = ["./", "./index.html", "./manifest.json", ...FRAMES];
+// Modelo 3D y three.js: se guardan en caché la primera vez que se abren.
+const RUNTIME_CACHE = (url) =>
+  url.includes("/assets/3d/") || url.startsWith("https://cdn.jsdelivr.net/npm/three@");
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)));
@@ -33,7 +38,16 @@ self.addEventListener("fetch", (e) => {
   }
 
   e.respondWith(
-    caches.match(e.request).then((cached) => cached || fetch(e.request))
+    caches.match(e.request).then((cached) => {
+      if (cached) return cached;
+      return fetch(e.request).then((res) => {
+        if (res.ok && RUNTIME_CACHE(e.request.url)) {
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put(e.request, copy));
+        }
+        return res;
+      });
+    })
   );
 });
 

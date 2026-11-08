@@ -9,6 +9,14 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Full Body Edwin">
 <title>Full Body — Edwin</title>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -205,19 +213,53 @@ th{color:var(--muted); font-weight:600; font-size:12px;}
   display:block; width:100%; aspect-ratio:16/9; height:auto; border:none;
   border-radius:14px; background:var(--muscle-bg);
 }
-.technique-stills{
-  position:relative; width:100%; aspect-ratio:4/3; border-radius:10px; overflow:hidden;
-  background:var(--chip-bg); margin-bottom:8px;
+/* Animación de técnica: 3 fotogramas SVG (workout-guide, CC BY-SA 4.0) en ciclo 1→2→3→2. */
+.technique-frames{
+  position:relative; width:100%; max-width:280px; margin:0 auto 8px; aspect-ratio:1;
+  background:var(--muscle-bg); border-radius:14px; overflow:hidden; cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
 }
-.technique-stills img{
-  position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block;
+.technique-frames img{
+  position:absolute; left:6%; top:6%; width:88%; height:88%; object-fit:contain; display:block;
+  opacity:0; animation:2.4s step-end infinite;
 }
-.technique-stills img:last-child{animation:techniqueLoop 1.8s ease-in-out infinite;}
-@keyframes techniqueLoop{
-  0%, 35%{opacity:0;}
-  50%, 85%{opacity:1;}
-  100%{opacity:0;}
+.technique-frames img:nth-child(1){animation-name:techFrame1;}
+.technique-frames img:nth-child(2){animation-name:techFrame2;}
+.technique-frames img:nth-child(3){animation-name:techFrame3;}
+.technique-frames.paused img{animation-play-state:paused;}
+.technique-frames-hint{
+  position:absolute; right:8px; bottom:6px; font-size:11px; font-weight:600; color:#9A9FA5;
 }
+@keyframes techFrame1{0%{opacity:1;} 25%{opacity:0;} 100%{opacity:0;}}
+@keyframes techFrame2{0%{opacity:0;} 25%{opacity:1;} 50%{opacity:0;} 75%{opacity:1;} 100%{opacity:1;}}
+@keyframes techFrame3{0%{opacity:0;} 50%{opacity:1;} 75%{opacity:0;} 100%{opacity:0;}}
+@media (prefers-reduced-motion:reduce){
+  .technique-frames img{animation:none;}
+  .technique-frames img:nth-child(1){opacity:1;}
+}
+.technique-3d-btn{
+  display:block; width:100%; margin:4px 0 12px; padding:10px 12px; border-radius:12px;
+  border:1px solid var(--line); background:var(--chip-bg); color:var(--ink);
+  font-family:Manrope; font-weight:700; font-size:13.5px; cursor:pointer;
+}
+.technique-3d-btn small{display:block; font-family:Inter; font-weight:500; font-size:11.5px; color:var(--muted); margin-top:2px;}
+.technique-3d{
+  position:relative; width:100%; aspect-ratio:4/5; max-height:60vh; margin:4px 0 12px;
+  background:var(--muscle-bg); border-radius:14px; overflow:hidden; touch-action:none;
+}
+.technique-3d canvas{display:block; width:100% !important; height:100% !important;}
+.technique-3d-status{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  padding:16px; text-align:center; color:#B9BEC4; font-size:13px;
+}
+.technique-3d-views{position:absolute; left:8px; bottom:8px; display:flex; gap:6px;}
+.technique-3d-views button{
+  border:none; border-radius:8px; padding:5px 9px; font-size:11.5px; font-weight:700;
+  background:rgba(255,255,255,.12); color:#F2F2ED; cursor:pointer;
+}
+.credits-list{margin:0; padding-left:18px; display:flex; flex-direction:column; gap:8px;}
+.credits-list li{font-size:12.5px; color:var(--muted); line-height:1.45;}
+.credits-list a{color:var(--accent2);}
 .technique-yt-link{
   display:inline-block; margin-top:8px; font-size:12.5px; font-weight:600;
   color:var(--muted); text-decoration:none;
@@ -418,6 +460,15 @@ nav.bottom svg{width:20px; height:20px;}
       </select>
     </div>
     <button class="btn-primary" id="profSave">Guardar y calcular metas</button>
+    <div class="settings-row" style="margin-top:28px;">
+      <label>Créditos y licencias</label>
+      <ul class="credits-list">
+        <li>Animaciones de técnica: <a href="https://github.com/bryllim/workout-guide" target="_blank" rel="noopener">Workout Guide</a> de Bryl Lim, con poses originales de <a href="https://github.com/everkinetic/data" target="_blank" rel="noopener">Everkinetic</a> (Greg Priday). Licencia <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>. Fotogramas sin modificar.</li>
+        <li>Modelo muscular 3D: BodyParts3D, © The Database Center for Life Science, licencia <a href="https://creativecommons.org/licenses/by-sa/2.1/jp/deed.en" target="_blank" rel="noopener">CC BY-SA 2.1 Japan</a>. Adaptado por <a href="https://github.com/organui/muscles-3d" target="_blank" rel="noopener">OrganUI</a> (selección, simplificación y conversión a GLB). La app solo cambia los colores en pantalla.</li>
+        <li>Diagrama muscular 2D: polígonos de <a href="https://github.com/giavinh79/react-body-highlighter" target="_blank" rel="noopener">react-body-highlighter</a>, © 2020 GV79, licencia MIT.</li>
+        <li>Visor 3D: <a href="https://threejs.org" target="_blank" rel="noopener">three.js</a>, licencia MIT.</li>
+      </ul>
+    </div>
     <div class="status-line" id="profStatus"></div>
   </section>
 </main>
@@ -1077,41 +1128,184 @@ function muscleDiagram(item){
  * para embed, basta con reemplazar su videoId aquí.
  */
 /*
- * Fotos fijas (inicio/fin del movimiento) por ejercicio, de
- * free-exercise-db (github.com/yuhonas/free-exercise-db), dominio público
- * (licencia Unlicense, sin atribución requerida). Se usan como referencia
- * visual rápida junto al video — no reemplazan al video, lo complementan.
+ * Animación de técnica: 3 fotogramas SVG por ejercicio de Workout Guide
+ * (github.com/bryllim/workout-guide), arte CC BY-SA 4.0 (Bryl Lim, derivado
+ * de Everkinetic). Copias locales sin modificar en assets/ejercicios/<slug>/
+ * (atribución en assets/ejercicios/ATTRIBUTION.md y en Ajustes → Créditos).
+ * Reemplaza las fotos de free-exercise-db: su origen no está verificado y
+ * no están autorizadas para uso comercial.
  */
-const FREE_EXERCISE_DB_IMAGES = {
-  "Sentadilla hack (máquina)": "Hack_Squat",
-  "Press inclinado con barra": "Barbell_Incline_Bench_Press_-_Medium_Grip",
-  "Remo en T-bar o máquina con pecho apoyado": "Lying_T-Bar_Row",
-  "Press Arnold con mancuernas": "Arnold_Dumbbell_Press",
-  "Curl femoral sentado": "Seated_Leg_Curl",
-  "Curl inclinado con mancuernas (banco 45°)": "Incline_Dumbbell_Curl",
-  "Extensión de tríceps sobre la cabeza en polea": "Cable_Rope_Overhead_Triceps_Extension",
-  "Elevación de piernas colgado": "Hanging_Leg_Raise",
-  "Peso muerto rumano con mancuernas": "Stiff-Legged_Dumbbell_Deadlift",
-  "Press plano con mancuernas": "Dumbbell_Bench_Press",
-  "Jalón agarre neutro o dominadas asistidas": "Close-Grip_Front_Lat_Pulldown",
-  "Elevaciones laterales en polea": "Cable_Seated_Lateral_Raise",
-  "Sentadilla búlgara": "Split_Squat_with_Dumbbells",
-  "Press francés con barra Z": "EZ-Bar_Skullcrusher",
-  "Rueda abdominal (ab wheel)": "Ab_Roller",
-  "Prensa de piernas (pies bajos y juntos)": "Narrow_Stance_Leg_Press",
-  "Remo en polea baja agarre neutro": "Seated_Cable_Rows",
-  "Press militar con barra (de pie)": "Standing_Military_Press",
-  "Hip thrust con pausa de 1 s arriba": "Barbell_Hip_Thrust",
-  "Face pull": "Face_Pull",
-  "Curl martillo con cuerda en polea": "Cable_Hammer_Curls_-_Rope_Attachment",
-  "Crunch en polea alta": "Cable_Crunch",
+const TECHNIQUE_FRAMES = {
+  "Sentadilla hack (máquina)": "hack-squat",
+  "Press inclinado con barra": "incline-bench-press",
+  "Remo en T-bar o máquina con pecho apoyado": "chest-supported-row",
+  "Press Arnold con mancuernas": "arnold-press",
+  "Curl femoral sentado": "seated-leg-curl",
+  "Curl inclinado con mancuernas (banco 45°)": "incline-dumbbell-curl",
+  "Extensión de tríceps sobre la cabeza en polea": "overhead-tricep-extension",
+  "Elevación de piernas colgado": "hanging-leg-raise",
+  "Peso muerto rumano con mancuernas": "dumbbell-romanian-deadlift",
+  "Press plano con mancuernas": "dumbbell-bench-press",
+  "Jalón agarre neutro o dominadas asistidas": "close-grip-lat-pulldown",
+  "Elevaciones laterales en polea": "cable-lateral-raise",
+  "Sentadilla búlgara": "bulgarian-split-squat",
+  "Press francés con barra Z": "skull-crusher",
+  "Rueda abdominal (ab wheel)": "ab-wheel",
+  "Prensa de piernas (pies bajos y juntos)": "leg-press",
+  "Remo en polea baja agarre neutro": "seated-row",
+  "Press militar con barra (de pie)": "overhead-press",
+  "Hip thrust con pausa de 1 s arriba": "hip-thrust",
+  "Face pull": "face-pull",
+  "Curl martillo con cuerda en polea": "rope-hammer-curl",
+  "Crunch en polea alta": "cable-crunch",
 };
 
-function freeExerciseDbImages(name){
-  const folder = FREE_EXERCISE_DB_IMAGES[name];
-  if(!folder) return null;
-  const base = `https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/${folder}/`;
-  return [base + "0.jpg", base + "1.jpg"];
+function techniqueFrames(name){
+  const slug = TECHNIQUE_FRAMES[name];
+  if(!slug) return null;
+  return [1, 2, 3].map(i => `assets/ejercicios/${slug}/frame-${i}.svg`);
+}
+
+function findProgramItem(name){
+  for(const key of Object.keys(PROGRAM)){
+    const item = PROGRAM[key].find(i => i.ex === name);
+    if(item) return item;
+  }
+  return null;
+}
+
+/*
+ * Visor 3D opcional: modelo muscular BodyParts3D (CC BY-SA 2.1 JP, adaptado
+ * por OrganUI, 177 músculos, 5,6 MB) + three.js. Se carga solo al tocar el
+ * botón; el Service Worker lo guarda para uso offline.
+ */
+const GROUP_TO_3D = {
+  "Pecho": ["pectoralis-major","pectoralis-minor"],
+  "Espalda": ["latissimus-dorsi","trapezius","rhomboid-major","rhomboid-minor","teres-major"],
+  "Hombro": ["deltoid"],
+  "Bíceps": ["biceps-brachii","brachialis","brachioradialis"],
+  "Tríceps": ["triceps-brachii","anconeus"],
+  "Core": ["rectus-abdominis","external-oblique","internal-oblique","transversus-abdominis"],
+  "Cuádriceps": ["rectus-femoris","vastus-lateralis","vastus-medialis","vastus-intermedius"],
+  "Isquiotibiales": ["biceps-femoris","semitendinosus","semimembranosus"],
+  "Glúteo": ["gluteus-maximus","gluteus-medius","gluteus-minimus"],
+};
+const MUSCLES_3D_URL = "assets/3d/muscles.glb";
+let viewer3D = null;
+
+async function openMuscles3D(container, item){
+  container.innerHTML = `<div class="technique-3d-status">Cargando modelo 3D…</div>`;
+  let THREE, GLTFLoader, OrbitControls;
+  try{
+    THREE = await import("three");
+    ({GLTFLoader} = await import("three/addons/loaders/GLTFLoader.js"));
+    ({OrbitControls} = await import("three/addons/controls/OrbitControls.js"));
+  }catch(e){
+    container.innerHTML = `<div class="technique-3d-status">No se pudo cargar el visor 3D. Necesitas conexión la primera vez que lo abres.</div>`;
+    return;
+  }
+  if(!container.isConnected) return;
+
+  const primaryIds = new Set(GROUP_TO_3D[item.grupo] || []);
+  const secondaryIds = new Set((item.sec || []).flatMap(g => GROUP_TO_3D[g] || []));
+  const css = getComputedStyle(document.documentElement);
+  const color = v => new THREE.Color(css.getPropertyValue(v).trim());
+
+  const renderer = new THREE.WebGLRenderer({antialias:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  const scene = new THREE.Scene();
+  scene.background = color("--muscle-bg");
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x30343a, 2.2));
+  const key = new THREE.DirectionalLight(0xffffff, 1.6);
+  key.position.set(1, 2, 3);
+  scene.add(key);
+  const camera = new THREE.PerspectiveCamera(30, 1, 0.01, 100);
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.enablePan = false;
+
+  const matPrimary = new THREE.MeshStandardMaterial({color:color("--muscle-primary"), roughness:.55, emissive:color("--muscle-primary"), emissiveIntensity:0});
+  const matSecondary = new THREE.MeshStandardMaterial({color:color("--muscle-secondary"), roughness:.6});
+  const matNeutral = new THREE.MeshStandardMaterial({color:color("--muscle-base"), roughness:.75});
+  [matPrimary, matSecondary, matNeutral].forEach(m => { m.side = THREE.DoubleSide; });
+
+  let gltf;
+  try{
+    gltf = await new GLTFLoader().loadAsync(MUSCLES_3D_URL);
+  }catch(e){
+    renderer.dispose();
+    if(container.isConnected) container.innerHTML = `<div class="technique-3d-status">No se pudo descargar el modelo 3D. Revisa tu conexión.</div>`;
+    return;
+  }
+  if(!container.isConnected){ renderer.dispose(); return; }
+
+  const model = gltf.scene;
+  model.traverse(obj => {
+    if(!obj.isMesh) return;
+    const id = obj.name;
+    obj.material = primaryIds.has(id) ? matPrimary : secondaryIds.has(id) ? matSecondary : matNeutral;
+  });
+  scene.add(model);
+
+  const box = new THREE.Box3().setFromObject(model);
+  const center = box.getCenter(new THREE.Vector3());
+  const height = box.getSize(new THREE.Vector3()).y;
+  const dist = (height / 2) / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * 1.1;
+  controls.target.copy(center);
+  controls.minDistance = dist * 0.25;
+  controls.maxDistance = dist * 1.6;
+  const setView = side => {
+    camera.position.set(center.x, center.y, center.z + (side === "back" ? -dist : dist));
+    controls.update();
+  };
+  setView(item.view || GROUP_VIEW[item.grupo] || "front");
+
+  container.innerHTML = `
+    <div class="technique-3d-views">
+      <button type="button" data-side="front">Frente</button>
+      <button type="button" data-side="back">Espalda</button>
+    </div>`;
+  container.prepend(renderer.domElement);
+  container.querySelectorAll("[data-side]").forEach(b => b.addEventListener("click", () => setView(b.dataset.side)));
+
+  const resize = () => {
+    const w = container.clientWidth, h = container.clientHeight;
+    if(!w || !h) return;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  };
+  const ro = new ResizeObserver(resize);
+  ro.observe(container);
+  resize();
+
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let raf = 0;
+  const loop = t => {
+    raf = requestAnimationFrame(loop);
+    // Pulso suave del músculo principal para guiar la vista.
+    matPrimary.emissiveIntensity = reduceMotion ? 0.15 : 0.12 + 0.12 * Math.sin(t / 380);
+    controls.update();
+    renderer.render(scene, camera);
+  };
+  raf = requestAnimationFrame(loop);
+
+  viewer3D = {
+    dispose(){
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+      controls.dispose();
+      model.traverse(o => { if(o.isMesh) o.geometry.dispose(); });
+      [matPrimary, matSecondary, matNeutral].forEach(m => m.dispose());
+      renderer.dispose();
+      renderer.forceContextLoss();
+    },
+  };
+}
+
+function disposeMuscles3D(){
+  if(viewer3D){ viewer3D.dispose(); viewer3D = null; }
 }
 
 const TECHNIQUE_VIDEOS = {
@@ -1383,15 +1577,24 @@ const TECHNIQUE_VIDEOS = {
 
 function openTechniqueModal(name, data){
   $("#techniqueTitle").textContent = name;
-  const stillImages = freeExerciseDbImages(name);
-  const stillsHtml = stillImages ? `
-    <div class="technique-stills">
-      <img src="${stillImages[0]}" alt="${name}: posición inicial" loading="lazy">
-      <img src="${stillImages[1]}" alt="${name}: posición final" loading="lazy">
+  const frames = techniqueFrames(name);
+  const item = findProgramItem(name);
+  const framesHtml = frames ? `
+    <div class="technique-frames" role="img" aria-label="${name}: animación de la técnica" title="Toca para pausar">
+      ${frames.map((src, i) => `<img src="${src}" alt="" width="512" height="512" decoding="async"${i === 0 ? "" : ` loading="lazy"`}>`).join("")}
+      <span class="technique-frames-hint">Toca para pausar</span>
     </div>
   ` : "";
+  const btn3dHtml = item && GROUP_TO_3D[item.grupo] ? `
+    <button class="technique-3d-btn" type="button" id="technique3dBtn">
+      Ver músculos en 3D
+      <small>Arrastra para girar · descarga 5,6 MB la primera vez</small>
+    </button>
+    <div class="technique-3d" id="technique3d" hidden></div>
+  ` : "";
   $("#techniqueAnim").innerHTML = `
-    ${stillsHtml}
+    ${framesHtml}
+    ${btn3dHtml}
     <iframe
       src="https://www.youtube-nocookie.com/embed/${data.videoId}?rel=0"
       title="Técnica: ${name}"
@@ -1403,11 +1606,28 @@ function openTechniqueModal(name, data){
   `;
   $("#techniqueSteps").innerHTML = data.pasos.map(p => `<li>${p}</li>`).join("");
   $("#techniqueMistakes").innerHTML = data.errores.map(e => `<li>${e}</li>`).join("");
+  const framesEl = $("#techniqueAnim .technique-frames");
+  if(framesEl){
+    framesEl.addEventListener("click", () => {
+      const paused = framesEl.classList.toggle("paused");
+      framesEl.querySelector(".technique-frames-hint").textContent = paused ? "Pausado · toca para seguir" : "Toca para pausar";
+    });
+  }
+  const btn3d = $("#technique3dBtn");
+  if(btn3d){
+    btn3d.addEventListener("click", () => {
+      const box = $("#technique3d");
+      btn3d.remove();
+      box.hidden = false;
+      openMuscles3D(box, item);
+    });
+  }
   $("#techniqueModal").hidden = false;
   document.body.style.overflow = "hidden";
 }
 
 function closeTechniqueModal(){
+  disposeMuscles3D();
   $("#techniqueModal").hidden = true;
   document.body.style.overflow = "";
   $("#techniqueAnim").innerHTML = "";
