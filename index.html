@@ -48,6 +48,20 @@ header.top{
   padding:14px 16px 10px; border-bottom:1px solid var(--line);
 }
 header.top h1{font-size:19px; font-weight:800;}
+header.top:has(.install-btn:not([hidden])) h1,
+header.top:has(.install-btn:not([hidden])) .sub{padding-right:112px;}
+/* Botón de instalación PWA: solo visible si el navegador permite instalar o en iPhone/iPad sin instalar. */
+.install-btn{
+  position:absolute; top:14px; right:16px; display:inline-flex; align-items:center; gap:6px;
+  min-height:36px; padding:0 14px; border:none; border-radius:999px;
+  background:var(--accent); color:var(--accent-ink);
+  font-family:Manrope,sans-serif; font-weight:800; font-size:13px; cursor:pointer;
+}
+.install-btn svg{width:16px; height:16px;}
+.install-btn[hidden]{display:none;}
+.install-steps{margin:0 0 16px; padding-left:20px; display:flex; flex-direction:column; gap:10px;}
+.install-steps li{font-size:14px; line-height:1.45; color:var(--ink);}
+.install-steps svg{width:16px; height:16px; vertical-align:-3px;}
 header.top .sub{font-size:12.5px; color:var(--muted); margin-top:2px;}
 .tabs{display:flex; gap:6px; margin-top:12px;}
 .tab{
@@ -364,6 +378,10 @@ nav.bottom svg{width:20px; height:20px;}
 
 <header class="top">
   <h1>Full Body — Edwin</h1>
+  <button class="install-btn" id="installBtn" type="button" hidden aria-label="Instalar la app en este teléfono">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
+    Instalar
+  </button>
   <div class="sub">Hipertrofia · 3 días/semana · <span id="todayLabel"></span></div>
   <div class="tabs" id="sessionTabs">
     <div class="tab" data-s="A">Sesión A</div>
@@ -490,6 +508,23 @@ nav.bottom svg{width:20px; height:20px;}
     <button type="button" id="restTimerSkip">Saltar</button>
   </div>
   <div class="rest-timer-bar"><div class="rest-timer-fill" id="restTimerFill"></div></div>
+</div>
+
+<div class="modal-overlay" id="installModal" hidden>
+  <div class="modal-panel">
+    <button class="modal-close" id="installClose" type="button" aria-label="Cerrar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+    <h3 class="technique-title">Instalar en iPhone o iPad</h3>
+    <ol class="install-steps">
+      <li>Abre esta página en <b>Safari</b>.</li>
+      <li>Toca <b>Compartir</b>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M8 7l4-4 4 4M5 12v8h14v-8"/></svg>
+        en la barra de abajo.</li>
+      <li>Elige <b>Agregar a inicio</b> y confirma con <b>Agregar</b>.</li>
+    </ol>
+    <button class="btn-primary" id="installCloseBtn" type="button">Entendido</button>
+  </div>
 </div>
 
 <div class="modal-overlay" id="techniqueModal" hidden>
@@ -2325,6 +2360,49 @@ renderExercises();
 loadNextSessionSuggestion();
 updateNotifyStatus();
 loadProfile();
+
+/* Instalación PWA: Android/Chrome usan beforeinstallprompt; iOS no lo soporta y se muestran instrucciones. */
+(function setupInstall(){
+  const btn = $("#installBtn");
+  const isStandalone = () =>
+    window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+  if(isStandalone()) return;
+
+  let deferredPrompt = null;
+  const ua = navigator.userAgent;
+  const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+  window.addEventListener("beforeinstallprompt", (e)=>{
+    e.preventDefault();
+    deferredPrompt = e;
+    btn.hidden = false;
+  });
+  window.addEventListener("appinstalled", ()=>{
+    deferredPrompt = null;
+    btn.hidden = true;
+    toast("App instalada");
+  });
+  if(isIOS) btn.hidden = false;
+
+  const closeInstall = ()=>{ $("#installModal").hidden = true; document.body.style.overflow = ""; };
+  $("#installClose").addEventListener("click", closeInstall);
+  $("#installCloseBtn").addEventListener("click", closeInstall);
+  $("#installModal").addEventListener("click", (e)=>{ if(e.target.id === "installModal") closeInstall(); });
+
+  btn.addEventListener("click", async ()=>{
+    if(deferredPrompt){
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      if(outcome === "accepted") btn.hidden = true;
+      return;
+    }
+    if(isIOS){
+      $("#installModal").hidden = false;
+      document.body.style.overflow = "hidden";
+    }
+  });
+})();
 
 if("serviceWorker" in navigator){
   window.addEventListener("load", ()=>{
