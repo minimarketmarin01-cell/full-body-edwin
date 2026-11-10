@@ -10,6 +10,10 @@ full-body-edwin/
 ├── manifest.json
 ├── sw.js
 ├── icon-192.png / icon-512.png
+├── assets/            # Dibujos de técnica (Workout Guide), mapa muscular y sus licencias
+├── data/exercises/    # Biblioteca de ejercicios (JSON por categoría)
+├── docs/BIBLIOTECA.md # Cómo agregar ejercicios a la biblioteca
+├── tools/             # Scripts (optimize-media.sh)
 └── worker/            # Backend (Cloudflare Worker + D1)
     ├── wrangler.toml
     ├── src/index.js

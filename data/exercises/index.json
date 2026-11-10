@@ -1,0 +1,77 @@
+{
+ "version": 1,
+ "categorias": [
+  {
+   "id": "chest",
+   "nombre": "Pecho",
+   "archivo": "chest.json",
+   "disponible": true
+  },
+  {
+   "id": "back",
+   "nombre": "Espalda",
+   "archivo": "back.json",
+   "disponible": false
+  },
+  {
+   "id": "shoulders",
+   "nombre": "Hombros",
+   "archivo": "shoulders.json",
+   "disponible": false
+  },
+  {
+   "id": "biceps",
+   "nombre": "Bíceps",
+   "archivo": "biceps.json",
+   "disponible": false
+  },
+  {
+   "id": "triceps",
+   "nombre": "Tríceps",
+   "archivo": "triceps.json",
+   "disponible": false
+  },
+  {
+   "id": "legs",
+   "nombre": "Piernas",
+   "archivo": "legs.json",
+   "disponible": false
+  },
+  {
+   "id": "glutes",
+   "nombre": "Glúteos",
+   "archivo": "glutes.json",
+   "disponible": false
+  },
+  {
+   "id": "abs",
+   "nombre": "Abdomen",
+   "archivo": "abs.json",
+   "disponible": false
+  },
+  {
+   "id": "forearms",
+   "nombre": "Antebrazos",
+   "archivo": "forearms.json",
+   "disponible": false
+  },
+  {
+   "id": "cardio",
+   "nombre": "Cardio",
+   "archivo": "cardio.json",
+   "disponible": false
+  }
+ ],
+ "equipamientos": [
+  "Barra",
+  "Mancuernas",
+  "Polea",
+  "Máquina",
+  "Peso corporal"
+ ],
+ "niveles": [
+  "Principiante",
+  "Intermedio",
+  "Avanzado"
+ ]
+}

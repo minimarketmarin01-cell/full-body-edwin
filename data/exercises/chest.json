@@ -1,0 +1,310 @@
+[
+ {
+  "id": "pecho-press-banca-barra",
+  "categoria": "chest",
+  "nombre_es": "Press banca con barra",
+  "nombre_en": "Barbell bench press",
+  "grupo": "Pecho",
+  "sec": [
+   "Tríceps",
+   "Hombro"
+  ],
+  "equipamiento": "Barra",
+  "tipo": "Compuesto",
+  "dificultad": "Intermedio",
+  "instrucciones": [
+   "Acuéstate con los ojos bajo la barra, los pies firmes en el suelo y las escápulas juntas y hacia abajo.",
+   "Agarra la barra un poco más ancha que los hombros y sácala del soporte con los brazos extendidos.",
+   "Baja la barra de forma controlada hasta la parte media del pecho, con los codos a unos 45–60° del torso.",
+   "Empuja hacia arriba y un poco hacia atrás hasta extender los brazos, sin bloquear los codos de golpe."
+  ],
+  "errores": [
+   "Rebotar la barra en el pecho para ayudarse a subir.",
+   "Abrir los codos a 90° del torso, lo que sobrecarga el hombro.",
+   "Despegar los glúteos del banco o soltar las escápulas durante la serie.",
+   "Doblar las muñecas hacia atrás en vez de mantenerlas sobre el antebrazo."
+  ],
+  "media": {
+   "fuente": "frames",
+   "slug": "bench-press",
+   "estado": "disponible"
+  }
+ },
+ {
+  "id": "pecho-press-banca-mancuernas",
+  "categoria": "chest",
+  "nombre_es": "Press banca con mancuernas",
+  "nombre_en": "Dumbbell bench press",
+  "grupo": "Pecho",
+  "sec": [
+   "Tríceps",
+   "Hombro"
+  ],
+  "equipamiento": "Mancuernas",
+  "tipo": "Compuesto",
+  "dificultad": "Intermedio",
+  "instrucciones": [
+   "Siéntate con las mancuernas sobre los muslos y recuéstate llevándolas al pecho, con las palmas hacia los pies.",
+   "Con las escápulas juntas y hacia abajo, empuja las mancuernas hasta extender los brazos sobre el pecho.",
+   "Baja de forma controlada hasta que los codos queden un poco por debajo del banco y sientas el pecho estirado.",
+   "Sube en línea recta, sin chocar las mancuernas arriba."
+  ],
+  "errores": [
+   "Bajar más allá de lo que tu hombro tolera cómodamente.",
+   "Dejar que las mancuernas se separen o se crucen durante el recorrido.",
+   "Arquear en exceso la zona lumbar para empujar más peso.",
+   "Usar un peso que no puedes controlar al bajar."
+  ],
+  "media": {
+   "fuente": "frames",
+   "slug": "dumbbell-bench-press",
+   "estado": "disponible"
+  }
+ },
+ {
+  "id": "pecho-press-inclinado-barra",
+  "categoria": "chest",
+  "nombre_es": "Press inclinado con barra",
+  "nombre_en": "Barbell incline bench press",
+  "grupo": "Pecho",
+  "sec": [
+   "Hombro",
+   "Tríceps"
+  ],
+  "equipamiento": "Barra",
+  "tipo": "Compuesto",
+  "dificultad": "Intermedio",
+  "instrucciones": [
+   "Ajusta el banco entre 30° y 45° y apoya los pies firmes en el suelo, con las escápulas juntas.",
+   "Agarra la barra un poco más ancha que los hombros y sácala del soporte.",
+   "Baja la barra hacia la parte alta del pecho, con los codos a unos 45–60° del torso.",
+   "Empuja en línea recta hasta extender los brazos."
+  ],
+  "errores": [
+   "Inclinar el banco a más de 45°, lo que desplaza el trabajo al hombro.",
+   "Bajar la barra hacia el cuello en vez de la parte alta del pecho.",
+   "Rebotar la barra en el pecho.",
+   "Despegar los glúteos del banco."
+  ],
+  "media": {
+   "fuente": "frames",
+   "slug": "incline-bench-press",
+   "estado": "disponible"
+  }
+ },
+ {
+  "id": "pecho-press-inclinado-mancuernas",
+  "categoria": "chest",
+  "nombre_es": "Press inclinado con mancuernas",
+  "nombre_en": "Dumbbell incline bench press",
+  "grupo": "Pecho",
+  "sec": [
+   "Hombro",
+   "Tríceps"
+  ],
+  "equipamiento": "Mancuernas",
+  "tipo": "Compuesto",
+  "dificultad": "Intermedio",
+  "instrucciones": [
+   "Ajusta el banco entre 30° y 45° y siéntate con las mancuernas sobre los muslos.",
+   "Recuéstate llevando las mancuernas a la altura de la parte alta del pecho, con las escápulas juntas.",
+   "Empuja hasta extender los brazos sobre el pecho, sin chocar las mancuernas.",
+   "Baja de forma controlada hasta sentir el estiramiento del pecho."
+  ],
+  "errores": [
+   "Inclinar el banco más de 45°.",
+   "Dejar que los codos se abran por completo a los lados.",
+   "Balancear el cuerpo para subir las mancuernas.",
+   "Bajar tan rápido que pierdes el control en el fondo."
+  ],
+  "media": {
+   "fuente": "frames",
+   "slug": "incline-dumbbell-press",
+   "estado": "disponible"
+  }
+ },
+ {
+  "id": "pecho-aperturas-mancuernas",
+  "categoria": "chest",
+  "nombre_es": "Aperturas con mancuernas",
+  "nombre_en": "Dumbbell fly",
+  "grupo": "Pecho",
+  "sec": [
+   "Hombro"
+  ],
+  "equipamiento": "Mancuernas",
+  "tipo": "Aislamiento",
+  "dificultad": "Intermedio",
+  "instrucciones": [
+   "Acuéstate en un banco plano con las mancuernas sobre el pecho, las palmas enfrentadas y los codos ligeramente flexionados.",
+   "Abre los brazos en arco hasta sentir el estiramiento del pecho, sin bajar de la altura del torso.",
+   "Mantén el mismo ángulo de los codos durante todo el movimiento.",
+   "Regresa en arco, como abrazando un árbol, hasta juntar las mancuernas sobre el pecho."
+  ],
+  "errores": [
+   "Flexionar y extender los codos durante el recorrido, que lo convierte en un press.",
+   "Bajar demasiado, con tensión excesiva en la parte delantera del hombro.",
+   "Usar demasiado peso y perder el control del arco.",
+   "Despegar la espalda baja del banco al abrir."
+  ],
+  "media": {
+   "fuente": "frames",
+   "slug": "dumbbell-fly",
+   "estado": "disponible"
+  }
+ },
+ {
+  "id": "pecho-cruce-poleas",
+  "categoria": "chest",
+  "nombre_es": "Cruce de poleas",
+  "nombre_en": "Cable crossover",
+  "grupo": "Pecho",
+  "sec": [
+   "Hombro"
+  ],
+  "equipamiento": "Polea",
+  "tipo": "Aislamiento",
+  "dificultad": "Intermedio",
+  "instrucciones": [
+   "Coloca las poleas en la posición alta, da un paso adelante y inclina el torso ligeramente.",
+   "Toma los agarres con los codos un poco flexionados y los brazos abiertos a la altura de los hombros.",
+   "Lleva las manos hacia el frente y hacia abajo en arco, hasta juntarlas delante del cuerpo.",
+   "Aprieta el pecho un segundo y regresa de forma controlada hasta sentir el estiramiento."
+  ],
+  "errores": [
+   "Impulsarse con el torso en vez de mover los brazos.",
+   "Flexionar y extender los codos durante el movimiento.",
+   "Dejar que los hombros se adelanten al regresar.",
+   "Soltar la tensión de las poleas al abrir."
+  ],
+  "media": {
+   "fuente": "frames",
+   "slug": "cable-fly",
+   "estado": "disponible"
+  }
+ },
+ {
+  "id": "pecho-press-maquina",
+  "categoria": "chest",
+  "nombre_es": "Press de pecho en máquina",
+  "nombre_en": "Machine chest press",
+  "grupo": "Pecho",
+  "sec": [
+   "Tríceps",
+   "Hombro"
+  ],
+  "equipamiento": "Máquina",
+  "tipo": "Compuesto",
+  "dificultad": "Principiante",
+  "instrucciones": [
+   "Ajusta el asiento para que los agarres queden a la altura del pecho.",
+   "Apoya la espalda en el respaldo y los pies firmes en el suelo.",
+   "Empuja los agarres hacia adelante hasta extender los brazos, sin bloquear los codos.",
+   "Regresa de forma lenta y controlada hasta sentir el estiramiento del pecho."
+  ],
+  "errores": [
+   "Dejar el asiento demasiado alto o bajo, con los agarres fuera de la línea del pecho.",
+   "Despegar la espalda del respaldo al empujar.",
+   "Encoger los hombros hacia las orejas.",
+   "Rebotar la pila de pesas en vez de controlar la bajada."
+  ],
+  "media": {
+   "fuente": "frames",
+   "slug": "machine-chest-press",
+   "estado": "disponible"
+  }
+ },
+ {
+  "id": "pecho-fondos-pecho",
+  "categoria": "chest",
+  "nombre_es": "Fondos para pecho",
+  "nombre_en": "Chest dip",
+  "grupo": "Pecho",
+  "sec": [
+   "Tríceps",
+   "Hombro"
+  ],
+  "equipamiento": "Peso corporal",
+  "tipo": "Compuesto",
+  "dificultad": "Avanzado",
+  "instrucciones": [
+   "Sube a las paralelas con los brazos extendidos, inclina el torso hacia adelante unos 30° y cruza los pies detrás.",
+   "Baja flexionando los codos, ligeramente abiertos, manteniendo el torso inclinado.",
+   "Detente cuando sientas el estiramiento del pecho, con los hombros cerca de la altura de los codos.",
+   "Empuja hasta extender los brazos, sin elevar los hombros hacia las orejas."
+  ],
+  "errores": [
+   "Mantener el torso vertical, que traslada el trabajo al tríceps.",
+   "Bajar más de lo que tu hombro tolera.",
+   "Balancear las piernas para ayudarse a subir.",
+   "Encoger los hombros hacia las orejas durante el movimiento."
+  ],
+  "media": {
+   "fuente": "frames",
+   "slug": "chest-dip",
+   "estado": "disponible"
+  }
+ },
+ {
+  "id": "pecho-flexiones",
+  "categoria": "chest",
+  "nombre_es": "Flexiones",
+  "nombre_en": "Push-up",
+  "grupo": "Pecho",
+  "sec": [
+   "Tríceps",
+   "Hombro",
+   "Core"
+  ],
+  "equipamiento": "Peso corporal",
+  "tipo": "Compuesto",
+  "dificultad": "Principiante",
+  "instrucciones": [
+   "Apoya las manos un poco más anchas que los hombros y forma una línea recta desde la cabeza hasta los talones.",
+   "Activa el abdomen y los glúteos para mantener el cuerpo firme.",
+   "Baja flexionando los codos, a unos 45° del torso, hasta que el pecho casi roce el suelo.",
+   "Empuja hasta extender los brazos, manteniendo la línea del cuerpo."
+  ],
+  "errores": [
+   "Dejar caer la cadera o levantarla hacia arriba.",
+   "Abrir los codos a 90° del torso.",
+   "Hacer un recorrido incompleto.",
+   "Adelantar el cuello en vez de mantenerlo alineado."
+  ],
+  "media": {
+   "fuente": "frames",
+   "slug": "push-up",
+   "estado": "disponible"
+  }
+ },
+ {
+  "id": "pecho-pullover-mancuerna",
+  "categoria": "chest",
+  "nombre_es": "Pullover con mancuerna",
+  "nombre_en": "Dumbbell pullover",
+  "grupo": "Pecho",
+  "sec": [
+   "Espalda",
+   "Tríceps"
+  ],
+  "equipamiento": "Mancuernas",
+  "tipo": "Aislamiento",
+  "dificultad": "Intermedio",
+  "instrucciones": [
+   "Acuéstate a lo largo de un banco, con la cabeza y los hombros apoyados, y sostén una mancuerna con ambas manos sobre el pecho.",
+   "Con los codos ligeramente flexionados, baja la mancuerna en arco por detrás de la cabeza.",
+   "Detente cuando sientas el estiramiento del pecho y los dorsales, sin forzar el hombro.",
+   "Regresa en arco hasta la posición inicial, manteniendo el mismo ángulo de los codos."
+  ],
+  "errores": [
+   "Flexionar y extender los codos, que convierte el ejercicio en un trabajo de tríceps.",
+   "Arquear la zona lumbar al bajar la mancuerna.",
+   "Bajar más allá de la movilidad cómoda del hombro.",
+   "Usar una carga que no puedes controlar sobre la cabeza."
+  ],
+  "media": {
+   "fuente": "ninguna",
+   "estado": "pendiente"
+  }
+ }
+]

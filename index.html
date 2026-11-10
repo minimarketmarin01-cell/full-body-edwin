@@ -438,6 +438,54 @@ button.prog-hint{cursor:pointer;}
 .set-row.pr .n{background:#F2B83A; color:#1A1008;}
 .backup-actions{display:flex; flex-direction:column; gap:8px; margin-top:8px;}
 .hist-note{font-size:12px; color:var(--muted); margin:8px 0 0;}
+
+/* ===== Biblioteca de ejercicios ===== */
+.lib-search{position:relative; margin-bottom:10px;}
+.lib-search svg{position:absolute; left:14px; top:13px; width:20px; height:20px; color:var(--muted); pointer-events:none;}
+.lib-search input{
+  width:100%; height:46px; border:none; border-radius:14px; background:var(--surface); color:var(--ink);
+  padding:0 14px 0 42px; font-size:15px; font-family:Inter;
+}
+.lib-search input::placeholder{color:var(--muted);}
+.lib-chips{display:flex; gap:8px; overflow-x:auto; margin:0 -16px 10px; padding:0 16px 4px; scrollbar-width:none;}
+.lib-chips::-webkit-scrollbar{display:none;}
+.lib-chip{
+  flex:none; height:38px; padding:0 15px; border-radius:999px; border:none; background:var(--surface);
+  color:var(--ink); font-family:Inter; font-weight:600; font-size:14px; cursor:pointer;
+}
+.lib-chip.active{background:var(--accent); color:var(--accent-ink);}
+.lib-chip.soon{color:var(--muted);}
+.lib-filters{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;}
+.lib-count{font-size:12.5px; color:var(--muted); margin:2px 2px 10px;}
+.lib-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+.lib-card{
+  background:var(--card); border:1px solid var(--line); border-radius:16px; padding:0; overflow:hidden;
+  text-align:left; cursor:pointer; color:var(--ink); font-family:Inter;
+}
+.lib-thumb{position:relative; aspect-ratio:1; background:var(--muscle-bg); display:flex; align-items:center; justify-content:center;}
+.lib-thumb img{width:88%; height:88%; object-fit:contain; display:block;}
+.lib-ph{color:#4A4F57; display:flex;}
+.lib-ph svg{width:46px; height:46px;}
+.lib-pending{
+  position:absolute; left:8px; bottom:8px; font-size:10.5px; font-weight:700; color:var(--accent-ink);
+  background:var(--muscle-secondary); padding:3px 8px; border-radius:999px;
+}
+.lib-info{padding:10px 12px 12px;}
+.lib-name{font-family:Manrope; font-weight:800; font-size:14.5px; line-height:1.25;}
+.lib-meta{font-size:12px; color:var(--muted); margin-top:4px;}
+.lib-tags{display:flex; flex-wrap:wrap; gap:6px; margin:8px 0 14px;}
+.lib-tag{font-size:12px; font-weight:600; padding:5px 11px; border-radius:999px; background:var(--surface); color:var(--ink);}
+.lib-tag.pri{background:var(--accent); color:var(--accent-ink);}
+.lib-sub{font-size:13px; color:var(--muted); margin:-6px 0 0;}
+.lib-nomedia{
+  margin:4px auto 10px; max-width:280px; aspect-ratio:1; border-radius:14px; background:var(--muscle-bg);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:16px; text-align:center;
+  color:#9AA0A6; font-size:13px; line-height:1.4;
+}
+.lib-nomedia .lib-ph svg{width:54px; height:54px;}
+.lib-video, .lib-gif{display:block; width:100%; max-width:280px; margin:4px auto 10px; border-radius:14px; background:#fff;}
+.lib-empty{grid-column:1/-1; text-align:center; color:var(--muted); font-size:13.5px; padding:26px 8px;}
+.lib-empty button{margin-top:12px;}
 </style>
 </head>
 <body>
@@ -476,6 +524,20 @@ button.prog-hint{cursor:pointer;}
     <div id="mealsBody"></div>
   </section>
 
+  <section class="view" id="view-ejercicios">
+    <div class="lib-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input id="libSearch" type="search" placeholder="Buscar ejercicio o músculo" autocomplete="off" aria-label="Buscar ejercicio o músculo">
+    </div>
+    <div class="lib-chips" id="libChips" aria-label="Categorías"></div>
+    <div class="lib-filters">
+      <select id="libEquip" aria-label="Equipamiento"></select>
+      <select id="libLevel" aria-label="Dificultad"></select>
+    </div>
+    <div class="lib-count" id="libCount" aria-live="polite"></div>
+    <div class="lib-grid" id="libGrid"></div>
+  </section>
+
   <section class="view" id="view-historial">
     <div class="settings-row">
       <label>Ejercicio</label>
@@ -508,6 +570,14 @@ button.prog-hint{cursor:pointer;}
         <option value="0">No</option>
       </select>
       <div class="status-line" id="wakeStatus"></div>
+    </div>
+    <div class="settings-row">
+      <label for="gymSelect">Imágenes de Gym visual (ejercicios de Hoy)</label>
+      <select id="gymSelect">
+        <option value="1">Mostrar</option>
+        <option value="0">Ocultar</option>
+      </select>
+      <div class="status-line">Son de terceros (© Gym visual) y no cuentas con una licencia propia. Al ocultarlas se usan los dibujos de Workout Guide.</div>
     </div>
     <p class="status-line" style="margin-top:0;">La app se conecta sola a su base de datos. Usa este botón solo si algo no está guardando bien.</p>
     <button class="btn-secondary" id="testApiUrl">Probar conexión</button>
@@ -572,7 +642,7 @@ button.prog-hint{cursor:pointer;}
     <div class="settings-row" style="margin-top:28px;">
       <label>Créditos y licencias</label>
       <ul class="credits-list">
-        <li>Animaciones de técnica: <a href="https://github.com/bryllim/workout-guide" target="_blank" rel="noopener">Workout Guide</a> de Bryl Lim, con poses originales de <a href="https://github.com/everkinetic/data" target="_blank" rel="noopener">Everkinetic</a> (Greg Priday). Licencia <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>. Fotogramas sin modificar.</li>
+        <li>Animaciones de técnica y biblioteca de ejercicios: <a href="https://github.com/bryllim/workout-guide" target="_blank" rel="noopener">Workout Guide</a> de Bryl Lim, con poses originales de <a href="https://github.com/everkinetic/data" target="_blank" rel="noopener">Everkinetic</a> (Greg Priday). Licencia <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>. Fotogramas sin modificar.</li>
         <li>GIFs de demostración: © <a href="https://gymvisual.com/" target="_blank" rel="noopener">Gym visual</a>, tomados del dataset <a href="https://github.com/hasaneyldrm/exercises-dataset" target="_blank" rel="noopener">exercises-dataset</a> (180×180). Uso personal; los derechos son de Gym visual y se rigen por <a href="https://gymvisual.com/content/3-terms-and-conditions-of-use" target="_blank" rel="noopener">sus términos</a>.</li>
         <li>Mapa muscular: siluetas de <a href="https://github.com/HichamELBSI/react-native-body-highlighter" target="_blank" rel="noopener">react-native-body-highlighter</a>, © 2022 ELABBASSI Hicham, licencia MIT (<a href="assets/body/LICENSE-react-native-body-highlighter.txt" target="_blank" rel="noopener">texto completo</a>).</li>
       </ul>
@@ -598,6 +668,16 @@ button.prog-hint{cursor:pointer;}
     <button type="button" id="restTimerSkip">Saltar</button>
   </div>
   <div class="rest-timer-bar"><div class="rest-timer-fill" id="restTimerFill"></div></div>
+</div>
+
+<div class="modal-overlay" id="libModal" hidden>
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="libTitle">
+    <button class="modal-close" id="libClose" type="button" aria-label="Cerrar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+    <div id="libSheet"></div>
+    <button class="btn-primary" id="libCloseBtn" type="button">Volver al catálogo</button>
+  </div>
 </div>
 
 <div class="modal-overlay" id="installModal" hidden>
@@ -732,6 +812,10 @@ button.prog-hint{cursor:pointer;}
   <button data-view="nutricion">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2c-1 3-4 4-4 8a4 4 0 0 0 8 0c0-4-3-5-4-8z"/><path d="M12 13v9"/></svg>
     Nutrición
+  </button>
+  <button data-view="ejercicios">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+    Ejercicios
   </button>
   <button data-view="historial">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M7 15l4-4 3 3 5-6"/></svg>
@@ -1363,6 +1447,7 @@ const GROUP_SLUGS = {
   "Glúteo": ["gluteal"],
 };
 
+const bodyMapItems = new Map();
 let bodyDataPromise = null;
 function injectBodyDefs(data){
   if(document.getElementById("bodyDefs")) return;
@@ -1400,10 +1485,12 @@ function bodySvg(data, view, tones){
 
 // Devuelve el contenedor; los dibujos se agregan al cargar los datos (ver hydrateBodyMaps).
 function muscleDiagram(item){
+  const key = item.ex || item.id;
+  bodyMapItems.set(key, item);
   const names = [item.grupo, ...(item.sec || [])];
   return `
     <div class="muscle-diagram">
-      <div class="muscle-diagram-bodies" data-ex="${encodeURIComponent(item.ex)}"><div class="body-map-status">Cargando mapa…</div></div>
+      <div class="muscle-diagram-bodies" data-ex="${encodeURIComponent(key)}"><div class="body-map-status">Cargando mapa…</div></div>
       <ul class="muscle-legend">
         ${names.map((n, i) => `<li class="${i === 0 ? "primary" : "secondary"}">${n}</li>`).join("")}
       </ul>
@@ -1416,7 +1503,8 @@ function hydrateBodyMaps(root){
   loadBodyData().then(data => {
     slots.forEach(el => {
       if(!el.isConnected) return;
-      const item = findProgramItem(decodeURIComponent(el.dataset.ex));
+      const key = decodeURIComponent(el.dataset.ex);
+      const item = bodyMapItems.get(key) || findProgramItem(key);
       if(!item) return;
       const tones = bodyTones(item);
       el.innerHTML = `<div>${bodySvg(data, "front", tones)}<div class="view-label">Frente</div></div>`
@@ -1512,9 +1600,12 @@ const GYM_VISUAL_GIFS = {
   "Crunch en polea alta": "0175-WW95auq",
 };
 
+// Interruptor en Ajustes: son imágenes de terceros, el usuario decide si se muestran.
+const gymVisualEnabled = () => { try{ return (localStorage.getItem("fb_gym") ?? "1") === "1"; }catch(e){ return true; } };
+
 function gymVisualMedia(name){
   const id = GYM_VISUAL_GIFS[name];
-  if(!id) return null;
+  if(!id || !gymVisualEnabled()) return null;
   return { gif: `${GYM_VISUAL_BASE}videos/${id}.gif`, still: `${GYM_VISUAL_BASE}images/${id}.jpg` };
 }
 
@@ -2329,12 +2420,220 @@ async function renderHistory(){
   }
 }
 
+/* ===== Biblioteca de ejercicios (pestaña "Ejercicios") =====
+ * Datos en data/exercises/index.json y data/exercises/<categoria>.json (se cargan
+ * por categoría, no todo junto). Cada ficha apunta a su media con `media.fuente`:
+ *   - "frames": fotogramas SVG de Workout Guide en assets/ejercicios/<slug>/ (CC BY-SA 4.0)
+ *   - "local":  media propia en <ruta>/preview.webp y animation.gif|webm
+ *   - "ninguna": pendiente de animación (se muestra el mapa muscular y los textos)
+ * Ver docs/BIBLIOTECA.md para agregar ejercicios. */
+const LIB_BASE = "data/exercises/";
+const libState = { cat: "all", q: "", equip: "", level: "" };
+try{ Object.assign(libState, JSON.parse(sessionStorage.getItem("fb_lib") || "{}")); }catch(e){}
+let libIndex = null;
+const libCache = new Map();
+let libToken = 0;
+let libSheetOpen = false;
+let libDebounce = null;
+
+const libNorm = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+const libSave = () => { try{ sessionStorage.setItem("fb_lib", JSON.stringify(libState)); }catch(e){} };
+const LIB_PLACEHOLDER = `<span class="lib-ph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 6v12M18 6v12M3 9v6M21 9v6M6 12h12"/></svg></span>`;
+
+async function libFetchJson(url){
+  const r = await fetch(url);
+  if(!r.ok) throw new Error(url + " " + r.status);
+  return r.json();
+}
+async function libLoadItems(){
+  if(!libIndex) libIndex = await libFetchJson(LIB_BASE + "index.json");
+  const cats = libIndex.categorias.filter(c => c.disponible && (libState.cat === "all" || c.id === libState.cat));
+  await Promise.all(cats.map(async c => {
+    if(!libCache.has(c.id)) libCache.set(c.id, await libFetchJson(LIB_BASE + c.archivo));
+  }));
+  return cats.flatMap(c => libCache.get(c.id));
+}
+
+// Resuelve las imágenes de una ficha. Devuelve null si está pendiente de animación.
+function libMedia(ex){
+  const m = ex.media || {};
+  if(m.fuente === "frames" && m.slug){
+    const base = `assets/ejercicios/${m.slug}/`;
+    return { kind: "frames", preview: base + "frame-1.svg", frames: [1, 2, 3].map(i => `${base}frame-${i}.svg`) };
+  }
+  if(m.fuente === "local" && m.ruta){
+    const base = m.ruta.endsWith("/") ? m.ruta : m.ruta + "/";
+    return { kind: "local", preview: base + "preview.webp", gif: base + "animation.gif", webm: m.webm ? base + "animation.webm" : null };
+  }
+  return null;
+}
+
+function libCardHtml(ex){
+  const md = libMedia(ex);
+  const thumb = md
+    ? `<img src="${md.preview}" alt="" width="160" height="160" loading="lazy" decoding="async">`
+    : LIB_PLACEHOLDER;
+  const pend = md ? "" : `<span class="lib-pending">Pendiente de animación</span>`;
+  return `<button class="lib-card" type="button" data-id="${ex.id}">
+    <div class="lib-thumb">${thumb}${pend}</div>
+    <div class="lib-info"><div class="lib-name">${ex.nombre_es}</div><div class="lib-meta">${ex.grupo} · ${ex.equipamiento}</div></div>
+  </button>`;
+}
+
+function libRenderControls(){
+  const chips = [{ id: "all", nombre: "Todos", disponible: true }, ...libIndex.categorias];
+  $("#libChips").innerHTML = chips.map(c =>
+    `<button type="button" class="lib-chip${libState.cat === c.id ? " active" : ""}${c.disponible ? "" : " soon"}" data-cat="${c.id}">${c.nombre}</button>`
+  ).join("");
+  const eq = $("#libEquip"), lv = $("#libLevel");
+  if(!eq.dataset.ready){
+    eq.innerHTML = `<option value="">Todo el equipamiento</option>` + libIndex.equipamientos.map(e => `<option>${e}</option>`).join("");
+    lv.innerHTML = `<option value="">Toda dificultad</option>` + libIndex.niveles.map(n => `<option>${n}</option>`).join("");
+    eq.dataset.ready = "1";
+  }
+  eq.value = libState.equip;
+  lv.value = libState.level;
+  if($("#libSearch").value !== libState.q) $("#libSearch").value = libState.q;
+}
+
+async function renderLibrary(){
+  const token = ++libToken;
+  const grid = $("#libGrid"), count = $("#libCount");
+  try{
+    if(!libIndex) grid.innerHTML = `<p class="lib-empty">Cargando…</p>`;
+    const items = await libLoadItems();
+    if(token !== libToken) return;
+    libRenderControls();
+    const q = libNorm(libState.q);
+    const list = items.filter(ex =>
+      (!libState.equip || ex.equipamiento === libState.equip) &&
+      (!libState.level || ex.dificultad === libState.level) &&
+      (!q || libNorm([ex.nombre_es, ex.nombre_en, ex.grupo, ex.equipamiento, ...(ex.sec || [])].join(" ")).includes(q))
+    );
+    const cat = libIndex.categorias.find(c => c.id === libState.cat);
+    count.textContent = list.length ? `${list.length} ${list.length === 1 ? "ejercicio" : "ejercicios"}` : "";
+    if(list.length){
+      grid.innerHTML = list.map(libCardHtml).join("");
+    } else if(cat && !cat.disponible){
+      grid.innerHTML = `<p class="lib-empty">La categoría ${cat.nombre} se agrega después de validar el prototipo de pecho.</p>`;
+    } else {
+      grid.innerHTML = `<p class="lib-empty">Sin resultados con estos filtros.<br><button class="btn-secondary" id="libClear" type="button">Limpiar filtros</button></p>`;
+    }
+  }catch(e){
+    if(token !== libToken) return;
+    count.textContent = "";
+    grid.innerHTML = `<p class="lib-empty">No se pudo cargar la biblioteca. Ábrela una vez con conexión.</p>`;
+  }
+}
+
+function libFindById(id){
+  for(const list of libCache.values()){
+    const f = list.find(e => e.id === id);
+    if(f) return f;
+  }
+  return null;
+}
+
+function libSheetHtml(ex){
+  const md = libMedia(ex);
+  let media;
+  if(md && md.kind === "frames"){
+    media = `<div class="technique-frames" id="libFrames" role="img" aria-label="${ex.nombre_es}: animación de la técnica" title="Toca para pausar">
+      ${md.frames.map((src, i) => `<img src="${src}" alt="" width="512" height="512" decoding="async"${i ? ` loading="lazy"` : ""}>`).join("")}
+      <span class="technique-frames-hint">Toca para pausar</span></div>`;
+  } else if(md && md.kind === "local"){
+    media = md.webm
+      ? `<video class="lib-video" autoplay loop muted playsinline poster="${md.preview}"><source src="${md.webm}" type="video/webm"></video>`
+      : `<img class="lib-gif" src="${md.gif}" alt="${ex.nombre_es}: animación" loading="lazy" onerror="this.src='${md.preview}'">`;
+  } else {
+    media = `<div class="lib-nomedia">${LIB_PLACEHOLDER}<div><b>Animación pendiente</b><br>Este ejercicio aún no tiene una animación validada.</div></div>`;
+  }
+  const tags = [
+    `<span class="lib-tag pri">${ex.grupo}</span>`,
+    `<span class="lib-tag">${ex.equipamiento}</span>`,
+    `<span class="lib-tag">${ex.tipo}</span>`,
+    `<span class="lib-tag">${ex.dificultad}</span>`,
+  ].join("");
+  return `
+    ${media}
+    <h3 class="technique-title" id="libTitle" style="margin-bottom:8px;">${ex.nombre_es}</h3>
+    <p class="lib-sub">${ex.nombre_en}</p>
+    <div class="lib-tags">${tags}</div>
+    <div class="technique-block">
+      <div class="technique-label">Músculos trabajados</div>
+      ${muscleDiagram(ex)}
+    </div>
+    <div class="technique-block">
+      <div class="technique-label">Cómo hacerlo</div>
+      <ol class="technique-list" style="list-style:decimal;">${ex.instrucciones.map(t => `<li>${t}</li>`).join("")}</ol>
+    </div>
+    <div class="technique-block">
+      <div class="technique-label errores">Errores frecuentes</div>
+      <ul class="technique-list errores">${ex.errores.map(t => `<li>${t}</li>`).join("")}</ul>
+    </div>`;
+}
+
+function openLibSheet(id){
+  const ex = libFindById(id);
+  if(!ex) return;
+  $("#libSheet").innerHTML = libSheetHtml(ex);
+  hydrateBodyMaps($("#libSheet"));
+  const fr = $("#libFrames");
+  if(fr){
+    fr.addEventListener("click", () => {
+      const paused = fr.classList.toggle("paused");
+      fr.querySelector(".technique-frames-hint").textContent = paused ? "Pausado · toca para seguir" : "Toca para pausar";
+    });
+  }
+  $("#libModal").hidden = false;
+  document.body.style.overflow = "hidden";
+  $("#libModal .modal-panel").scrollTop = 0;
+  if(!libSheetOpen){ try{ history.pushState({ lib: 1 }, ""); }catch(e){} }
+  libSheetOpen = true;
+}
+// Cerrar con el botón o tocando fuera; el botón "atrás" de Android también la cierra.
+function closeLibSheet(fromPop){
+  if(!libSheetOpen) return;
+  $("#libModal").hidden = true;
+  $("#libSheet").innerHTML = "";
+  document.body.style.overflow = "";
+  libSheetOpen = false;
+  if(!fromPop && history.state && history.state.lib){ try{ history.back(); }catch(e){} }
+}
+window.addEventListener("popstate", () => { if(libSheetOpen) closeLibSheet(true); });
+
+$("#libChips").addEventListener("click", e => {
+  const b = e.target.closest(".lib-chip");
+  if(!b) return;
+  libState.cat = b.dataset.cat; libSave(); renderLibrary();
+});
+$("#libSearch").addEventListener("input", e => {
+  libState.q = e.target.value; libSave();
+  clearTimeout(libDebounce);
+  libDebounce = setTimeout(renderLibrary, 150);
+});
+$("#libEquip").addEventListener("change", e => { libState.equip = e.target.value; libSave(); renderLibrary(); });
+$("#libLevel").addEventListener("change", e => { libState.level = e.target.value; libSave(); renderLibrary(); });
+$("#libGrid").addEventListener("click", e => {
+  if(e.target.closest("#libClear")){
+    Object.assign(libState, { cat: "all", q: "", equip: "", level: "" }); libSave();
+    $("#libSearch").value = ""; renderLibrary(); return;
+  }
+  const c = e.target.closest(".lib-card");
+  if(c) openLibSheet(c.dataset.id);
+});
+$("#libClose").addEventListener("click", () => closeLibSheet(false));
+$("#libCloseBtn").addEventListener("click", () => closeLibSheet(false));
+$("#libModal").addEventListener("click", e => { if(e.target.id === "libModal") closeLibSheet(false); });
+document.addEventListener("keydown", e => { if(e.key === "Escape" && libSheetOpen) closeLibSheet(false); });
+
 function switchView(name){
   $$(".view").forEach(v => v.classList.remove("active"));
   $(`#view-${name}`).classList.add("active");
   $$("nav.bottom button").forEach(b => b.classList.toggle("active", b.dataset.view === name));
   if(name === "historial") renderHistory();
   if(name === "nutricion") renderNutricion();
+  if(name === "ejercicios") renderLibrary();
   wakeSync();
 }
 
@@ -2619,6 +2918,15 @@ document.addEventListener("visibilitychange", wakeSync);
     wakeSync();
   });
   wakeSync();
+})();
+
+(function setupGymToggle(){
+  const sel = $("#gymSelect");
+  sel.value = gymVisualEnabled() ? "1" : "0";
+  sel.addEventListener("change", () => {
+    try{ localStorage.setItem("fb_gym", sel.value); }catch(e){}
+    renderExercises();
+  });
 })();
 
 /* Copia de seguridad: JSON completo y CSV de entrenamientos. */
