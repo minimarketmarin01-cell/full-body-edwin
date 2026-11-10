@@ -3,12 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
-<meta name="theme-color" content="#171A1C">
+<meta name="theme-color" content="#0D0E10">
 <link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Full Body Edwin">
 <title>Full Body — Edwin</title>
+<script>
+/* Tema: oscuro por defecto; "claro" y "auto" (sistema) se eligen en Ajustes. */
+try{ document.documentElement.dataset.theme = localStorage.getItem("fb_theme") || "dark"; }
+catch(e){ document.documentElement.dataset.theme = "dark"; }
+</script>
 <script type="importmap">
 {
   "imports": {
@@ -24,16 +29,21 @@
 :root{
   --bg:#F5F5F2; --card:#FFFFFF; --ink:#1E2022; --muted:#6B7075; --line:#E6E6E1;
   --accent:#D9622B; --accent2:#3B6EA5; --accent-ink:#FFFFFF; --ok:#3F7D4F; --ok-bg:#E7F2E9;
-  --chip-bg:#EFEFEA;
+  --chip-bg:#EFEFEA; --surface:#EFEFEA; --ok-ink:#FFFFFF; --ph:#A7ABB0; --nav:#FFFFFF;
   /* Panel de músculos: siempre oscuro, estilo app de entrenamiento, sin depender del tema claro/oscuro. */
   --muscle-bg:#15171A; --muscle-base:#3C4046; --muscle-primary:#E8783C; --muscle-secondary:#6FA8E0;
   font-size:16px;
 }
+:root[data-theme="dark"]{
+  --bg:#0D0E10; --card:#17191C; --surface:#1D2024; --ink:#F4F4F1; --muted:#8E949B; --line:#25282C;
+  --accent:#F0813F; --accent2:#6FA8E0; --accent-ink:#1A1008; --ok:#4CC38A; --ok-bg:#12302A; --chip-bg:#1D2024;
+  --ok-ink:#06160F; --ph:#555B62; --nav:#111316;
+}
 @media (prefers-color-scheme:dark){
-  :root{
-    --bg:#15171A; --card:#1E2124; --ink:#F2F2ED; --muted:#9A9FA5; --line:#2B2F33;
-    --accent:#E8783C; --accent2:#6FA8E0; --accent-ink:#171A1C; --ok:#5FB073; --ok-bg:#1E2E22;
-    --chip-bg:#2A2E32;
+  :root[data-theme="auto"]{
+    --bg:#0D0E10; --card:#17191C; --surface:#1D2024; --ink:#F4F4F1; --muted:#8E949B; --line:#25282C;
+    --accent:#F0813F; --accent2:#6FA8E0; --accent-ink:#1A1008; --ok:#4CC38A; --ok-bg:#12302A; --chip-bg:#1D2024;
+    --ok-ink:#06160F; --ph:#555B62; --nav:#111316;
   }
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -381,6 +391,60 @@ nav.bottom svg{width:20px; height:20px;}
 .food-qty-row{display:flex; align-items:center; justify-content:space-between; gap:10px; margin:14px 0;}
 .food-qty-row input{width:90px; text-align:center;}
 .food-source-tag{font-size:10px; font-weight:700; text-transform:uppercase; padding:2px 6px; border-radius:6px; background:var(--bg); color:var(--muted); flex-shrink:0;}
+
+/* ===== Rediseño: miniaturas circulares, pastillas, entradas grandes y botón de confirmar circular ===== */
+body{padding-bottom:84px;}
+header.top{border-bottom:none; padding:18px 18px 6px;}
+header.top h1{font-size:23px; letter-spacing:-.01em;}
+header.top .sub{font-size:13px; margin-top:3px;}
+.tabs{background:var(--surface); border-radius:16px; padding:4px; gap:4px; margin-top:14px;}
+.tab{background:transparent; border-radius:12px; padding:11px 4px; font-size:14.5px;}
+.tab.active{background:var(--accent); color:var(--accent-ink);}
+.next-session{background:var(--ok-bg); color:var(--ok); border-radius:12px; padding:10px 12px;}
+main{padding:6px 18px 24px;}
+.card{background:transparent; border:none; border-bottom:1px solid var(--line); border-radius:0; padding:20px 0 22px; margin:0;}
+.card:last-child{border-bottom:none;}
+.ex-head{display:flex; align-items:center; gap:14px; justify-content:flex-start;}
+.ex-thumb{width:64px; height:64px; border-radius:50%; background:#fff; border:1px solid var(--line); cursor:pointer; flex:none; overflow:hidden; display:flex; align-items:center; justify-content:center;}
+.ex-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
+.ex-thumb.fallback img{object-fit:contain; padding:6px; filter:invert(1);}
+.ex-info{min-width:0;}
+.ex-name{font-size:18px; font-weight:800; line-height:1.2; letter-spacing:-.005em;}
+.ex-target{font-size:13px; margin-top:5px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;}
+.grp-dot{width:8px; height:8px; border-radius:50%; background:var(--accent); display:inline-block;}
+.ex-notes{font-size:14.5px; line-height:1.4; margin-top:14px; font-style:normal; color:var(--muted);}
+.ex-links{margin-top:14px; gap:8px; flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none; margin-right:-18px; padding-right:18px;}
+.ex-links::-webkit-scrollbar{display:none;}
+.video-link, .muscle-toggle, .rest-pill{
+  flex:none; height:40px; padding:0 15px; border-radius:999px; background:var(--surface); border:none;
+  font-family:Inter; font-size:14px; font-weight:600; color:var(--ink); display:inline-flex; align-items:center; gap:7px; white-space:nowrap;
+}
+.video-link svg{color:var(--accent); width:15px; height:15px;}
+.muscle-toggle svg{width:14px; height:14px;}
+.rest-pill{color:var(--muted); font-weight:500;}
+.rest-pill svg{width:16px; height:16px;}
+.sets-head{display:grid; grid-template-columns:40px 1fr 1fr 46px; gap:10px; margin-top:20px; padding:0 0 8px;
+  font-size:11.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); text-align:center;}
+.sets-head span:first-child{text-align:left; padding-left:4px;}
+.sets{margin-top:0; gap:10px;}
+.set-row, .set-row.uni-row{grid-template-columns:40px 1fr 1fr 46px; gap:10px;}
+.set-row.timed{grid-template-columns:40px 48px 1fr 46px;}
+.set-row .n{width:36px; height:36px; border-radius:10px; background:var(--surface); display:flex; align-items:center; justify-content:center; font-size:14px; color:var(--ink);}
+.set-row input{
+  height:50px; border:none; background:var(--surface); border-radius:13px; padding:0 8px;
+  font-size:20px; font-weight:700; color:var(--ink);
+}
+.set-row input::placeholder{color:var(--ph); opacity:1; font-weight:700;}
+.unit-label{display:none;}
+.set-row.done input{background:var(--ok-bg); color:var(--ok);}
+.set-btn{width:46px; height:46px; padding:0; border-radius:50%; font-size:0; background:var(--surface); color:var(--muted); display:flex; align-items:center; justify-content:center;}
+.set-btn::after{content:"";width:22px;height:22px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center/contain no-repeat; mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center/contain no-repeat;}
+.set-btn.done{background:var(--ok); color:var(--ok-ink);}
+.timer-btn{border-radius:12px; min-height:50px;}
+nav.bottom{background:var(--nav); border-top:1px solid var(--line); padding-top:8px;}
+nav.bottom button{font-size:11.5px;}
+.modal-panel{background:var(--card);}
+.btn-primary{border-radius:14px; padding:14px;}
 </style>
 </head>
 <body>
@@ -436,6 +500,14 @@ nav.bottom svg{width:20px; height:20px;}
   </section>
 
   <section class="view" id="view-ajustes">
+    <div class="settings-row">
+      <label for="themeSelect">Tema</label>
+      <select id="themeSelect">
+        <option value="dark">Oscuro</option>
+        <option value="light">Claro</option>
+        <option value="auto">Automático (según el teléfono)</option>
+      </select>
+    </div>
     <p class="status-line" style="margin-top:0;">La app se conecta sola a su base de datos. Usa este botón solo si algo no está guardando bien.</p>
     <button class="btn-secondary" id="testApiUrl">Probar conexión</button>
     <div class="status-line" id="apiStatus"></div>
@@ -875,6 +947,13 @@ function celebrateSessionComplete(){
   el._hideTimeout = setTimeout(()=>{ el.hidden = true; }, 4000);
 }
 
+function exThumb(name){
+  const gym = gymVisualMedia(name), fr = techniqueFrames(name);
+  if(gym) return `<div class="ex-thumb"><img src="${gym.still}" alt="" width="64" height="64" crossorigin="anonymous" loading="lazy" onerror="this.parentNode.classList.add('fallback');this.src='${fr ? fr[0] : ""}'"></div>`;
+  if(fr) return `<div class="ex-thumb fallback"><img src="${fr[0]}" alt="" width="64" height="64" loading="lazy"></div>`;
+  return `<div class="ex-thumb"></div>`;
+}
+
 async function renderExercises(){
   const token = ++exRenderToken;
   const list = $("#exList");
@@ -951,27 +1030,26 @@ async function renderExercises(){
 
     return `
       <div class="ex-head">
-        <div>
+        ${exThumb(item.ex)}
+        <div class="ex-info">
           <div class="ex-name">${item.ex}</div>
-          <div class="ex-target">${item.series} series · ${item.reps}${item.timed ? "" : " reps"} · RIR ${item.rir}</div>
-        </div>
-        <div class="ex-badge-wrap">
-          ${muscleIcon(item.grupo)}
-          <div class="ex-badge">${item.grupo}</div>
+          <div class="ex-target"><span class="grp-dot"></span>${item.grupo} · ${item.series} series · ${item.reps}${item.timed ? "" : " reps"} · RIR ${item.rir}</div>
         </div>
       </div>
       ${item.notas ? `<div class="ex-notes">${item.notas}</div>` : ""}
       <div class="ex-links">
         <button class="video-link" type="button" data-ex="${encodeURIComponent(item.ex)}" data-video="${videoUrl}">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-          Ver técnica
+          Técnica
         </button>
         <button class="muscle-toggle" type="button">
-          Músculos trabajados
+          Músculos
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
         </button>
+        ${item.descanso ? `<span class="rest-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9.5 3h5"/></svg>${Math.floor(item.descanso/60)}:${String(item.descanso%60).padStart(2,"0")}</span>` : ""}
       </div>
       <div class="muscle-panel" hidden>${muscleDiagram(item)}</div>
+      <div class="sets-head"><span>Serie</span><span>${item.timed ? "Seg" : "Kg"}</span><span>${item.timed ? "" : "Reps"}</span><span></span></div>
       <div class="sets">${setsHtml}</div>
     `;
   });
@@ -986,6 +1064,10 @@ async function renderExercises(){
 
   const allBtns = $$(".set-btn", list);
   sessionCelebrated = allBtns.length > 0 && allBtns.every(b => b.classList.contains("done"));
+
+  $$(".ex-thumb", list).forEach(th=>{
+    th.addEventListener("click", ()=> th.closest(".card").querySelector(".video-link")?.click());
+  });
 
   $$(".muscle-toggle", list).forEach(btn=>{
     btn.addEventListener("click", ()=>{
@@ -2435,6 +2517,22 @@ renderExercises();
 loadNextSessionSuggestion();
 updateNotifyStatus();
 loadProfile();
+
+/* Tema: se guarda en este dispositivo y se aplica al instante. */
+(function setupTheme(){
+  const sel = $("#themeSelect"), meta = document.querySelector('meta[name="theme-color"]');
+  const apply = (v)=>{
+    document.documentElement.dataset.theme = v;
+    if(meta) meta.content = v === "light" ? "#F5F5F2" : "#0D0E10";
+  };
+  let cur = "dark";
+  try{ cur = localStorage.getItem("fb_theme") || "dark"; }catch(e){}
+  sel.value = cur; apply(cur);
+  sel.addEventListener("change", ()=>{
+    try{ localStorage.setItem("fb_theme", sel.value); }catch(e){}
+    apply(sel.value);
+  });
+})();
 
 /* Instalación PWA: Android/Chrome usan beforeinstallprompt; iOS no lo soporta y se muestran instrucciones. */
 (function setupInstall(){
