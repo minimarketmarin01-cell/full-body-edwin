@@ -194,10 +194,11 @@ th{color:var(--muted); font-weight:600; font-size:12px;}
 .lc-date{fill:var(--muted); font-size:10.5px; font-family:Inter;}
 .empty{color:var(--muted); font-size:13.5px; text-align:center; padding:20px 0;}
 .toast{
-  position:fixed; left:50%; bottom:90px; transform:translateX(-50%);
-  background:var(--ink); color:var(--bg); padding:9px 16px; border-radius:999px;
+  position:fixed; left:50%; bottom:calc(172px + env(safe-area-inset-bottom)); transform:translateX(-50%);
+  background:var(--ink); color:var(--bg); padding:10px 18px; border-radius:18px;
+  max-width:calc(100vw - 32px); text-align:center; line-height:1.3;
   font-size:13.5px; font-weight:600; opacity:0; pointer-events:none; transition:opacity .2s;
-  z-index:50;
+  z-index:70;
 }
 .toast.show{opacity:1;}
 .celebration{
@@ -445,6 +446,21 @@ nav.bottom{background:var(--nav); border-top:1px solid var(--line); padding-top:
 nav.bottom button{font-size:11.5px;}
 .modal-panel{background:var(--card);}
 .btn-primary{border-radius:14px; padding:14px;}
+
+/* ===== Progreso: objetivo del día, 1RM estimado, récords ===== */
+.prog{margin-top:14px; display:flex; flex-direction:column; gap:8px;}
+.prog-hint{
+  display:block; width:100%; text-align:left; background:var(--surface); border:none; border-radius:14px;
+  padding:12px 14px; color:var(--ink); font-family:Inter; cursor:default;
+}
+button.prog-hint{cursor:pointer;}
+.prog-hint b{display:block; font-family:Manrope; font-size:15px; font-weight:800; color:var(--accent);}
+.prog-hint span{display:block; font-size:12.5px; line-height:1.4; color:var(--muted); margin-top:3px;}
+.e1rm-line{font-size:12.5px; color:var(--muted); padding:0 2px;}
+.e1rm-line b{color:var(--ink);}
+.set-row.pr .n{background:#F2B83A; color:#1A1008;}
+.backup-actions{display:flex; flex-direction:column; gap:8px; margin-top:8px;}
+.hist-note{font-size:12px; color:var(--muted); margin:8px 0 0;}
 </style>
 </head>
 <body>
@@ -508,6 +524,14 @@ nav.bottom button{font-size:11.5px;}
         <option value="auto">Automático (según el teléfono)</option>
       </select>
     </div>
+    <div class="settings-row">
+      <label for="wakeSelect">Pantalla encendida al entrenar</label>
+      <select id="wakeSelect">
+        <option value="1">Sí, mientras estoy en Hoy</option>
+        <option value="0">No</option>
+      </select>
+      <div class="status-line" id="wakeStatus"></div>
+    </div>
     <p class="status-line" style="margin-top:0;">La app se conecta sola a su base de datos. Usa este botón solo si algo no está guardando bien.</p>
     <button class="btn-secondary" id="testApiUrl">Probar conexión</button>
     <div class="status-line" id="apiStatus"></div>
@@ -559,6 +583,15 @@ nav.bottom button{font-size:11.5px;}
       </select>
     </div>
     <button class="btn-primary" id="profSave">Guardar y calcular metas</button>
+    <div class="settings-row" style="margin-top:28px;">
+      <label>Copia de seguridad</label>
+      <p class="status-line" style="margin-top:0;">Descarga tus entrenamientos, alimentación y perfil. El JSON guarda todo; el CSV se abre en Excel (separador ;).</p>
+      <div class="backup-actions">
+        <button class="btn-secondary" id="exportJson" type="button">Descargar respaldo (JSON)</button>
+        <button class="btn-secondary" id="exportCsv" type="button">Descargar entrenamientos (CSV)</button>
+      </div>
+      <div class="status-line" id="exportStatus"></div>
+    </div>
     <div class="settings-row" style="margin-top:28px;">
       <label>Créditos y licencias</label>
       <ul class="credits-list">
@@ -935,6 +968,7 @@ function checkSessionComplete(list){
   if(btns.length > 0 && done === btns.length && !sessionCelebrated){
     sessionCelebrated = true;
     celebrateSessionComplete();
+    if(typeof wakeSync === "function") wakeSync();
   }
 }
 
@@ -954,6 +988,146 @@ function exThumb(name){
   return `<div class="ex-thumb"></div>`;
 }
 
+/* ===== PROGRESO:inicio ===== */
+const EPLEY_MAX_REPS = 12;
+
+// 1RM estimado con la fórmula de Epley. Solo series de 1 a 12 reps con peso.
+function e1rm(weight, reps){
+  if(!(weight > 0) || !(reps >= 1) || reps > EPLEY_MAX_REPS) return null;
+  return reps === 1 ? weight : weight * (1 + reps / 30);
+}
+function fmtKg(x){
+  const r = Math.round(x * 2) / 2;
+  return (Number.isInteger(r) ? String(r) : r.toFixed(1)).replace(".", ",");
+}
+function fmtDateShort(iso){
+  const [y, m, d] = String(iso).split("-");
+  return `${d}/${m}`;
+}
+// Mejor 1RM estimado de una lista de series (opcionalmente filtradas).
+function bestE1rm(rows, filterFn){
+  let best = null;
+  for(const r of rows){
+    if(filterFn && !filterFn(r)) continue;
+    const v = e1rm(r.weight, r.reps);
+    if(v !== null && (best === null || v > best.value)){
+      best = { value: v, date: r.date, weight: r.weight, reps: r.reps, set: r.set_number };
+    }
+  }
+  return best;
+}
+function parseRepRange(txt){
+  const m = String(txt).match(/(\d+)\s*[-–]\s*(\d+)/);
+  if(m) return { lo: +m[1], hi: +m[2] };
+  const n = parseInt(txt, 10);
+  return isNaN(n) ? null : { lo: n, hi: n };
+}
+// Salto de carga según el tipo de ejercicio (regla práctica).
+function progressionStep(name){
+  return /mancuerna|búlgara|bulgara/i.test(name) ? 2 : 2.5;
+}
+// Sesión anterior a una fecha: las series de la fecha más reciente anterior.
+function latestSessionRows(hist, beforeDate){
+  const dates = [...new Set(hist.filter(r => r.date < beforeDate).map(r => r.date))].sort();
+  const last = dates[dates.length - 1];
+  return last ? hist.filter(r => r.date === last) : [];
+}
+// Progresión doble: se sube peso solo si TODAS las series llegan al tope del rango.
+function suggestProgression(item, rows, when){
+  if(!rows || !rows.length) return null;
+  const range = parseRepRange(item.reps);
+  if(!range) return null;
+  const expected = item.series * (item.unilateral ? 2 : 1);
+  const goal = `Objetivo ${when}`;
+
+  if(item.timed){
+    const secs = rows.map(r => r.reps).filter(v => v > 0);
+    if(!secs.length) return null;
+    if(secs.length >= expected && secs.every(v => v >= range.hi)){
+      return { weight: null, title: `${goal}: ${range.hi + 5} s`,
+        why: `Llegaste al tope del rango (${range.hi} s) en todas las series. Toca sumar 5 s.` };
+    }
+    return { weight: null, title: `${goal}: ${range.hi} s en cada serie`,
+      why: `Última vez: ${secs.join(" / ")} s. Cuando llegues a ${range.hi} s en todas, suma 5 s.` };
+  }
+
+  const loaded = rows.filter(r => r.weight > 0 && r.reps > 0);
+  if(!loaded.length){
+    const reps = rows.map(r => r.reps).filter(v => v > 0);
+    if(!reps.length) return null;
+    if(reps.length >= expected && reps.every(v => v >= range.hi)){
+      return { weight: null, title: `${goal}: más dificultad`,
+        why: `Hiciste ${reps.join(" / ")} reps, el tope del rango ${range.lo}-${range.hi}. Agrega carga o una variante más difícil.` };
+    }
+    return { weight: null, title: `${goal}: ${range.hi} reps en cada serie`,
+      why: `Última vez: ${reps.join(" / ")} reps. Sube la dificultad cuando llegues a ${range.hi} en todas.` };
+  }
+
+  // Peso de trabajo = el más repetido (si empatan, el mayor).
+  const freq = new Map();
+  loaded.forEach(r => freq.set(r.weight, (freq.get(r.weight) || 0) + 1));
+  let w = null, c = 0;
+  for(const [k, v] of freq){ if(v > c || (v === c && k > w)){ w = k; c = v; } }
+  const atW = loaded.filter(r => r.weight >= w);
+  const reps = atW.map(r => r.reps);
+  const step = progressionStep(item.ex);
+  const missing = atW.length < expected ? `Registraste ${atW.length} de ${expected} series. ` : "";
+
+  if(!missing && reps.every(v => v >= range.hi)){
+    return { weight: w + step, title: `${goal}: ${fmtKg(w + step)} kg`,
+      why: `Completaste ${expected} series de ${range.hi}+ reps con ${fmtKg(w)} kg, el tope del rango ${range.lo}-${range.hi}. Toca subir ${fmtKg(step)} kg.` };
+  }
+  const below = reps.filter(v => v < range.lo).length;
+  if(below){
+    return { weight: w, title: `${goal}: ${fmtKg(w)} kg`,
+      why: `${missing}${below === 1 ? "Una serie quedó" : below + " series quedaron"} bajo ${range.lo} reps (${reps.join(" / ")}). No se sube hasta llegar a ${range.lo} en todas.` };
+  }
+  return { weight: w, title: `${goal}: ${fmtKg(w)} kg · ${range.hi} reps`,
+    why: `${missing}Última vez: ${reps.join(" / ")} reps. Sube de peso cuando llegues a ${range.hi} en todas las series.` };
+}
+/* ===== PROGRESO:fin ===== */
+
+function progBlockHtml(item, hist, fallbackRows){
+  const today = todayISO();
+  let rows = null, when = "hoy";
+  if(hist){
+    const todayRows = hist.filter(r => r.date === today);
+    const expected = item.series * (item.unilateral ? 2 : 1);
+    if(todayRows.length >= expected){ rows = todayRows; when = "próxima sesión"; }
+    else rows = latestSessionRows(hist, today);
+  } else if(fallbackRows && fallbackRows.length && fallbackRows[0].date !== today){
+    rows = fallbackRows;
+  }
+  const sug = suggestProgression(item, rows, when);
+  const best = hist ? bestE1rm(hist) : null;
+  if(!sug && !best) return "";
+  const hint = sug ? (sug.weight
+    ? `<button class="prog-hint" type="button" data-w="${sug.weight}"><b>${sug.title}</b><span>${sug.why} Toca para cargar el peso.</span></button>`
+    : `<div class="prog-hint"><b>${sug.title}</b><span>${sug.why}</span></div>`) : "";
+  const e = best
+    ? `<div class="e1rm-line" title="Fórmula de Epley, series de 1 a 12 reps">1RM estimado: <b>${fmtKg(best.value)} kg</b> · ${fmtKg(best.weight)} kg × ${best.reps} el ${fmtDateShort(best.date)}</div>`
+    : "";
+  return `<div class="prog">${hint}${e}</div>`;
+}
+
+// Historial de series por ejercicio (para récords y progresión), en memoria.
+const historyCache = new Map();
+
+// Actualiza el historial con la serie guardada y devuelve el récord si lo hay.
+function registerSetForRecords(ex, setNumber, weight, reps, isTimed){
+  const hist = historyCache.get(ex);
+  if(!hist || isTimed) return null;
+  const today = todayISO();
+  const now = e1rm(weight, reps);
+  const priorAll = bestE1rm(hist, r => !(r.date === today && r.set_number === setNumber));
+  const priorDay = bestE1rm(hist, r => r.date < today);
+  const i = hist.findIndex(r => r.date === today && r.set_number === setNumber);
+  const entry = { date: today, session: currentSession, exercise: ex, set_number: setNumber, weight, reps };
+  if(i >= 0) hist[i] = { ...hist[i], ...entry }; else hist.push(entry);
+  if(now === null || !priorAll || !priorDay) return null;
+  return now > priorAll.value + 0.001 ? { now, before: priorAll.value } : null;
+}
+
 async function renderExercises(){
   const token = ++exRenderToken;
   const list = $("#exList");
@@ -962,11 +1136,19 @@ async function renderExercises(){
   plankTimers.forEach(id => clearInterval(id));
   plankTimers.clear();
 
-  const [logsResult, ...lastResults] = await Promise.allSettled([
+  const allResults = await Promise.allSettled([
     api(`/api/logs?date=${todayISO()}`),
     ...day.map(item => api(`/api/last?exercise=${encodeURIComponent(item.ex)}`)),
+    ...day.map(item => api(`/api/logs?exercise=${encodeURIComponent(item.ex)}&limit=600`)),
   ]);
   if(token !== exRenderToken) return;
+  const logsResult = allResults[0];
+  const lastResults = allResults.slice(1, 1 + day.length);
+  const histResults = allResults.slice(1 + day.length);
+  day.forEach((item, i) => {
+    if(histResults[i].status === "fulfilled") historyCache.set(item.ex, histResults[i].value.slice());
+    else historyCache.delete(item.ex);
+  });
 
   let todaysLogs = {};
   if(logsResult.status === "fulfilled"){
@@ -979,6 +1161,8 @@ async function renderExercises(){
     if(lastRes.status === "fulfilled"){
       lastRes.value.forEach(r => { lastHint[r.set_number] = r; });
     }
+    const hist = historyCache.get(item.ex) || null;
+    const priorDayBest = hist ? bestE1rm(hist, r => r.date < todayISO()) : null;
 
     const slots = [];
     if(item.unilateral){
@@ -997,6 +1181,8 @@ async function renderExercises(){
       const hint = lastHint[setNumber];
       const wPlaceholder = hint?.weight ?? "";
       const rPlaceholder = hint?.reps ?? "";
+      const savedE = saved && !item.timed ? e1rm(saved.weight, saved.reps) : null;
+      const isPr = !!(priorDayBest && savedE !== null && savedE > priorDayBest.value + 0.001);
       const nCell = slot.side
         ? `<div class="n uni"><span>${slot.label}</span><small>${slot.side}</small></div>`
         : `<div class="n">${slot.label}</div>`;
@@ -1012,7 +1198,7 @@ async function renderExercises(){
           </div>
           <button class="set-btn ${saved ? "done" : ""}">${saved ? "✓" : "Ok"}</button>
         </div>` : `
-        <div class="set-row ${item.unilateral ? "uni-row" : ""} ${saved ? "done" : ""}" data-ex="${encodeURIComponent(item.ex)}" data-n="${setNumber}">
+        <div class="set-row ${item.unilateral ? "uni-row" : ""} ${saved ? "done" : ""} ${isPr ? "pr" : ""}" data-ex="${encodeURIComponent(item.ex)}" data-n="${setNumber}">
           ${nCell}
           <div class="field-unit">
             <input type="number" inputmode="decimal" class="w-input" placeholder="${wPlaceholder}" value="${saved?.weight ?? ""}">
@@ -1049,6 +1235,7 @@ async function renderExercises(){
         ${item.descanso ? `<span class="rest-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9.5 3h5"/></svg>${Math.floor(item.descanso/60)}:${String(item.descanso%60).padStart(2,"0")}</span>` : ""}
       </div>
       <div class="muscle-panel" hidden>${muscleDiagram(item)}</div>
+      ${progBlockHtml(item, hist, lastRes.status === "fulfilled" ? lastRes.value : null)}
       <div class="sets-head"><span>Serie</span><span>${item.timed ? "Seg" : "Kg"}</span><span>${item.timed ? "" : "Reps"}</span><span></span></div>
       <div class="sets">${setsHtml}</div>
     `;
@@ -1064,6 +1251,17 @@ async function renderExercises(){
 
   const allBtns = $$(".set-btn", list);
   sessionCelebrated = allBtns.length > 0 && allBtns.every(b => b.classList.contains("done"));
+  if(typeof wakeSync === "function") wakeSync();
+
+  $$(".prog-hint[data-w]", list).forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const w = btn.dataset.w;
+      const inputs = $$(".set-row:not(.timed):not(.done) .w-input", btn.closest(".card"));
+      let n = 0;
+      inputs.forEach(i => { if(!i.value){ i.value = w; n++; } });
+      toast(n ? `Peso ${fmtKg(Number(w))} kg cargado en ${n} ${n === 1 ? "serie" : "series"}` : "Las series ya tienen peso");
+    });
+  });
 
   $$(".ex-thumb", list).forEach(th=>{
     th.addEventListener("click", ()=> th.closest(".card").querySelector(".video-link")?.click());
@@ -1100,6 +1298,13 @@ async function renderExercises(){
       const n = Number(row.dataset.n);
       const isTimed = row.classList.contains("timed");
       if(isTimed && plankTimers.has(row)) toggleSetStopwatch($(".timer-btn", row));
+      // Un toque en ✓ con los campos vacíos repite lo de la última vez (el valor gris).
+      let typed = 0, filled = 0;
+      $$("input", row).forEach(inp => {
+        if(inp.value) typed++;
+        else if(inp.placeholder){ inp.value = inp.placeholder; filled++; }
+      });
+      const repeated = filled > 0 && typed === 0;
       const weight = isTimed ? null : (parseFloat($(".w-input", row).value) || null);
       const reps = isTimed ? (parseInt($(".t-input", row).value) || null) : (parseInt($(".r-input", row).value) || null);
       if(isTimed ? reps === null : (weight === null && reps === null)){
@@ -1115,7 +1320,14 @@ async function renderExercises(){
         btn.classList.add("done");
         btn.textContent = "✓";
         row.classList.add("done");
-        toast("Serie guardada");
+        const rec = registerSetForRecords(ex, n, weight, reps, isTimed);
+        if(rec){
+          row.classList.add("pr");
+          toast(`🏆 Récord: 1RM est. ${fmtKg(rec.now)} kg (antes ${fmtKg(rec.before)} kg)`);
+          if(navigator.vibrate) navigator.vibrate([80, 50, 80, 50, 160]);
+        } else {
+          toast(repeated ? "Serie guardada (igual que la última vez)" : "Serie guardada");
+        }
         const item = PROGRAM[currentSession].find(i => i.ex === ex);
         if(item?.descanso) startRestTimer(item.descanso);
         checkSessionComplete(list);
@@ -2250,18 +2462,33 @@ async function renderHistory(){
   const body = $("#historyBody");
   body.innerHTML = `<p class="empty">Cargando…</p>`;
   try{
-    const logs = await api(`/api/logs?exercise=${encodeURIComponent(ex)}`);
+    const logs = await api(`/api/logs?exercise=${encodeURIComponent(ex)}&limit=2000`);
     if(!logs.length){ body.innerHTML = `<p class="empty">Sin registros aún para este ejercicio.</p>`; return; }
     const byDate = {};
     logs.forEach(l => { (byDate[l.date] = byDate[l.date] || []).push(l); });
     const dates = Object.keys(byDate).sort().slice(-7);
-    let html = `<div class="section-title">Progresión de carga</div>`;
-    html += buildLoadChart(dates, byDate);
-    html += `<div class="section-title">Registros</div><table><thead><tr><th>Fecha</th><th>Set</th><th>Peso (kg)</th><th>Reps</th></tr></thead><tbody>`;
-    logs.forEach(l => {
-      html += `<tr><td>${l.date}</td><td>${l.set_number}</td><td>${l.weight ?? "-"}</td><td>${l.reps ?? "-"}</td></tr>`;
+    // Récord = la mejor serie de un día supera la mejor de todos los días anteriores.
+    const recordKeys = new Set();
+    let running = null;
+    [...new Set(logs.map(l => l.date))].sort().forEach(d => {
+      const top = bestE1rm(logs.filter(l => l.date === d));
+      if(!top) return;
+      if(running !== null && top.value > running + 0.001) recordKeys.add(`${d}|${top.set}`);
+      running = running === null ? top.value : Math.max(running, top.value);
     });
-    html += `</tbody></table>`;
+    const best = bestE1rm(logs);
+    let html = best
+      ? `<div class="e1rm-line" style="margin-bottom:6px;">Mejor 1RM estimado: <b>${fmtKg(best.value)} kg</b> · ${fmtKg(best.weight)} kg × ${best.reps} el ${fmtDateShort(best.date)}</div>`
+      : "";
+    html += `<div class="section-title">Progresión de carga</div>`;
+    html += buildLoadChart(dates, byDate);
+    html += `<div class="section-title">Registros</div><table><thead><tr><th>Fecha</th><th>Set</th><th>Peso (kg)</th><th>Reps</th><th>1RM est.</th></tr></thead><tbody>`;
+    logs.forEach(l => {
+      const e = e1rm(l.weight, l.reps);
+      const rec = recordKeys.has(`${l.date}|${l.set_number}`) ? " 🏆" : "";
+      html += `<tr><td>${l.date}</td><td>${l.set_number}</td><td>${l.weight ?? "-"}</td><td>${l.reps ?? "-"}</td><td>${e === null ? "-" : fmtKg(e)}${rec}</td></tr>`;
+    });
+    html += `</tbody></table><p class="hist-note">1RM estimado con la fórmula de Epley (series de 1 a 12 reps). 🏆 marca el día en que superaste tu mejor marca anterior.</p>`;
     body.innerHTML = html;
   }catch(e){
     body.innerHTML = `<p class="empty">Configura la URL de la API en Ajustes.</p>`;
@@ -2274,6 +2501,7 @@ function switchView(name){
   $$("nav.bottom button").forEach(b => b.classList.toggle("active", b.dataset.view === name));
   if(name === "historial") renderHistory();
   if(name === "nutricion") renderNutricion();
+  wakeSync();
 }
 
 $("#sessionTabs").addEventListener("click", e=>{
@@ -2517,6 +2745,110 @@ renderExercises();
 loadNextSessionSuggestion();
 updateNotifyStatus();
 loadProfile();
+
+/* Pantalla encendida mientras entrenas (Wake Lock). Solo en Hoy, con la app visible. */
+const WAKE_MAX_MS = 90 * 60 * 1000;
+let wakeLock = null, wakeTimer = null;
+const wakeEnabled = () => { try{ return (localStorage.getItem("fb_wake") ?? "1") === "1"; }catch(e){ return true; } };
+const wakeSupported = () => "wakeLock" in navigator;
+
+async function wakeSync(){
+  const want = wakeEnabled() && wakeSupported() && document.visibilityState === "visible"
+    && $("#view-hoy").classList.contains("active") && !sessionCelebrated;
+  if(want && !wakeLock){
+    try{
+      wakeLock = await navigator.wakeLock.request("screen");
+      wakeLock.addEventListener("release", () => { wakeLock = null; });
+      clearTimeout(wakeTimer);
+      // Seguro contra olvidos: suelta la pantalla tras 90 min seguidos.
+      wakeTimer = setTimeout(() => wakeRelease(), WAKE_MAX_MS);
+    }catch(e){ wakeLock = null; }
+  } else if(!want){
+    wakeRelease();
+  }
+}
+async function wakeRelease(){
+  clearTimeout(wakeTimer);
+  if(wakeLock){ try{ await wakeLock.release(); }catch(e){} wakeLock = null; }
+}
+document.addEventListener("visibilitychange", wakeSync);
+
+(function setupWake(){
+  const sel = $("#wakeSelect"), st = $("#wakeStatus");
+  sel.value = wakeEnabled() ? "1" : "0";
+  if(!wakeSupported()){
+    sel.disabled = true;
+    st.textContent = "Este navegador no permite mantener la pantalla encendida.";
+  }
+  sel.addEventListener("change", () => {
+    try{ localStorage.setItem("fb_wake", sel.value); }catch(e){}
+    wakeSync();
+  });
+  wakeSync();
+})();
+
+/* Copia de seguridad: JSON completo y CSV de entrenamientos. */
+function downloadFile(name, mime, content){
+  const blob = new Blob([content], { type: mime });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+}
+function csvCell(v){
+  const s = v === null || v === undefined ? "" : String(v);
+  return /[";\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+// Formato para Excel en español: separador ; y coma decimal.
+function csvNum(v){ return v === null || v === undefined ? "" : String(v).replace(".", ","); }
+function logsToCsv(logs){
+  const head = ["fecha", "sesion", "ejercicio", "serie", "peso_kg", "reps", "rir", "1rm_estimado_kg"];
+  const lines = [head.join(";")];
+  logs.forEach(l => {
+    const e = e1rm(l.weight, l.reps);
+    lines.push([
+      csvCell(l.date), csvCell(l.session), csvCell(l.exercise), csvNum(l.set_number),
+      csvNum(l.weight), csvNum(l.reps), csvNum(l.rir), e === null ? "" : csvNum(Math.round(e * 10) / 10),
+    ].join(";"));
+  });
+  return "\uFEFFsep=;\n" + lines.join("\r\n") + "\r\n";
+}
+async function fetchExportData(){
+  try{
+    const d = await api("/api/export");
+    return { data: d, partial: false };
+  }catch(e){
+    // Servidor sin /api/export: respaldo parcial con los endpoints existentes.
+    const names = [...new Set(Object.values(PROGRAM).flat().map(i => i.ex))];
+    const rs = await Promise.all(names.map(n => api(`/api/logs?exercise=${encodeURIComponent(n)}&limit=100000`)));
+    const profile = await api("/api/profile").catch(() => null);
+    const logs = rs.flat().sort((a, b) => (a.date + a.exercise + String(a.set_number).padStart(3, "0")).localeCompare(b.date + b.exercise + String(b.set_number).padStart(3, "0")));
+    return { data: { app: "fullbody-edwin", version: 1, exported_at: new Date().toISOString(), logs, food_logs: null, profile }, partial: true };
+  }
+}
+async function runExport(kind){
+  const st = $("#exportStatus");
+  st.textContent = "Preparando…";
+  try{
+    const { data, partial } = await fetchExportData();
+    const stamp = todayISO();
+    if(kind === "csv"){
+      downloadFile(`fullbody-edwin-entrenamientos-${stamp}.csv`, "text/csv;charset=utf-8", logsToCsv(data.logs));
+      st.textContent = `Descargado: ${data.logs.length} series.` + (partial ? " Respaldo parcial: solo ejercicios del programa actual." : "");
+    } else {
+      downloadFile(`fullbody-edwin-respaldo-${stamp}.json`, "application/json", JSON.stringify(data, null, 2));
+      const food = data.food_logs ? `${data.food_logs.length} alimentos` : "sin alimentación";
+      st.textContent = `Descargado: ${data.logs.length} series, ${food}.` + (partial ? " Respaldo parcial: el servidor aún no tiene /api/export." : "");
+    }
+  }catch(e){
+    st.textContent = "No se pudo descargar. Revisa tu conexión.";
+  }
+}
+$("#exportJson").addEventListener("click", () => runExport("json"));
+$("#exportCsv").addEventListener("click", () => runExport("csv"));
 
 /* Tema: se guarda en este dispositivo y se aplica al instante. */
 (function setupTheme(){

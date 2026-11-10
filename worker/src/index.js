@@ -278,6 +278,22 @@ export default {
         });
       }
 
+      if (pathname === "/api/export" && request.method === "GET") {
+        const [logs, food, profile] = await Promise.all([
+          env.DB.prepare("SELECT * FROM logs ORDER BY date, exercise, set_number").all(),
+          env.DB.prepare("SELECT * FROM food_logs ORDER BY date, created_at").all(),
+          env.DB.prepare("SELECT * FROM profile WHERE id = 1").first(),
+        ]);
+        return json({
+          app: "fullbody-edwin",
+          version: 1,
+          exported_at: new Date().toISOString(),
+          logs: logs.results,
+          food_logs: food.results,
+          profile: profile || null,
+        });
+      }
+
       return json({ error: "Not found" }, 404);
     } catch (err) {
       return json({ error: String(err) }, 500);
