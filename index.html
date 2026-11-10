@@ -251,6 +251,15 @@ th{color:var(--muted); font-weight:600; font-size:12px;}
   .technique-frames img{animation:none;}
   .technique-frames img:nth-child(1){opacity:1;}
 }
+.technique-gif{
+  position:relative; width:100%; max-width:240px; margin:0 auto 8px; aspect-ratio:1;
+  background:#fff; border-radius:14px; overflow:hidden;
+}
+.technique-gif img{display:block; width:100%; height:100%; object-fit:contain;}
+.technique-gif-credit{
+  position:absolute; right:8px; bottom:6px; font-size:10.5px; font-weight:600;
+  color:#6B7075; text-decoration:none; background:rgba(255,255,255,.85); padding:1px 6px; border-radius:6px;
+}
 .technique-3d-btn{
   display:block; width:100%; margin:4px 0 12px; padding:10px 12px; border-radius:12px;
   border:1px solid var(--line); background:var(--chip-bg); color:var(--ink);
@@ -482,6 +491,7 @@ nav.bottom svg{width:20px; height:20px;}
       <label>Créditos y licencias</label>
       <ul class="credits-list">
         <li>Animaciones de técnica: <a href="https://github.com/bryllim/workout-guide" target="_blank" rel="noopener">Workout Guide</a> de Bryl Lim, con poses originales de <a href="https://github.com/everkinetic/data" target="_blank" rel="noopener">Everkinetic</a> (Greg Priday). Licencia <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>. Fotogramas sin modificar.</li>
+        <li>GIFs de demostración: © <a href="https://gymvisual.com/" target="_blank" rel="noopener">Gym visual</a>, tomados del dataset <a href="https://github.com/hasaneyldrm/exercises-dataset" target="_blank" rel="noopener">exercises-dataset</a> (180×180). Uso personal; los derechos son de Gym visual y se rigen por <a href="https://gymvisual.com/content/3-terms-and-conditions-of-use" target="_blank" rel="noopener">sus términos</a>.</li>
         <li>Modelo muscular 3D: BodyParts3D, © The Database Center for Life Science, licencia <a href="https://creativecommons.org/licenses/by-sa/2.1/jp/deed.en" target="_blank" rel="noopener">CC BY-SA 2.1 Japan</a>. Adaptado por <a href="https://github.com/organui/muscles-3d" target="_blank" rel="noopener">OrganUI</a> (selección, simplificación y conversión a GLB). La app solo cambia los colores en pantalla.</li>
         <li>Diagrama muscular 2D: polígonos de <a href="https://github.com/giavinh79/react-body-highlighter" target="_blank" rel="noopener">react-body-highlighter</a>, © 2020 GV79, licencia MIT.</li>
         <li>Visor 3D: <a href="https://threejs.org" target="_blank" rel="noopener">three.js</a>, licencia MIT.</li>
@@ -1195,6 +1205,47 @@ const TECHNIQUE_FRAMES = {
   "Crunch en polea alta": "cable-crunch",
 };
 
+/*
+ * GIFs de demostración de Gym visual (© Gym visual — https://gymvisual.com/),
+ * tomados del dataset github.com/hasaneyldrm/exercises-dataset (180×180).
+ * Uso personal de esta app. NO se copian al repo: se cargan desde ese repo
+ * (raw.githubusercontent.com) y el Service Worker los guarda en caché al verlos.
+ * Los términos de redistribución son de Gym visual (ver NOTICE.md del dataset);
+ * si la app pasa a uso comercial, hay que obtener licencia directa de Gym visual.
+ * Si un ejercicio no tiene GIF (o falla la carga), se muestran los fotogramas
+ * SVG de Workout Guide. Hip thrust y face pull quedan solo con fotogramas porque
+ * el dataset no tiene un movimiento equivalente.
+ */
+const GYM_VISUAL_BASE = "https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/";
+const GYM_VISUAL_GIFS = {
+  "Sentadilla hack (máquina)": "0743-Qa55kX1",
+  "Press inclinado con barra": "0047-3TZduzM",
+  "Remo en T-bar o máquina con pecho apoyado": "0606-aaXr7ld",
+  "Press Arnold con mancuernas": "2137-Xy4jlWA",
+  "Curl femoral sentado": "0599-Zg3XY7P",
+  "Curl inclinado con mancuernas (banco 45°)": "0318-ae9UoXQ",
+  "Extensión de tríceps sobre la cabeza en polea": "0194-2IxROQ1",
+  "Elevación de piernas colgado": "0472-I3tsCnC",
+  "Peso muerto rumano con mancuernas": "1459-rR0LJzx",
+  "Press plano con mancuernas": "0289-SpYC0Kp",
+  "Jalón agarre neutro o dominadas asistidas": "0818-rkg41Fb",
+  "Elevaciones laterales en polea": "0178-goJ6ezq",
+  "Sentadilla búlgara": "0410-qx4fgX7",
+  "Press francés con barra Z": "0060-h8LFzo9",
+  "Rueda abdominal (ab wheel)": "0857-NAgVB3t",
+  "Prensa de piernas (pies bajos y juntos)": "1463-2Qh2J1e",
+  "Remo en polea baja agarre neutro": "0180-hvV79Si",
+  "Press militar con barra (de pie)": "1456-wdRZISl",
+  "Curl martillo con cuerda en polea": "0165-HPlPoQA",
+  "Crunch en polea alta": "0175-WW95auq",
+};
+
+function gymVisualMedia(name){
+  const id = GYM_VISUAL_GIFS[name];
+  if(!id) return null;
+  return { gif: `${GYM_VISUAL_BASE}videos/${id}.gif`, still: `${GYM_VISUAL_BASE}images/${id}.jpg` };
+}
+
 function techniqueFrames(name){
   const slug = TECHNIQUE_FRAMES[name];
   if(!slug) return null;
@@ -1614,6 +1665,14 @@ function openTechniqueModal(name, data){
   $("#techniqueTitle").textContent = name;
   const frames = techniqueFrames(name);
   const item = findProgramItem(name);
+  const gym = gymVisualMedia(name);
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const gymHtml = gym ? `
+    <div class="technique-gif" id="techniqueGif">
+      <img src="${reduceMotion ? gym.still : gym.gif}" alt="${name}: demostración animada" width="180" height="180" crossorigin="anonymous" decoding="async">
+      <a class="technique-gif-credit" href="https://gymvisual.com/" target="_blank" rel="noopener">© Gym visual</a>
+    </div>
+  ` : "";
   const framesHtml = frames ? `
     <div class="technique-frames" role="img" aria-label="${name}: animación de la técnica" title="Toca para pausar">
       ${frames.map((src, i) => `<img src="${src}" alt="" width="512" height="512" decoding="async"${i === 0 ? "" : ` loading="lazy"`}>`).join("")}
@@ -1627,8 +1686,10 @@ function openTechniqueModal(name, data){
     </button>
     <div class="technique-3d" id="technique3d" hidden></div>
   ` : "";
+  const showFrames = frames && !gym;
   $("#techniqueAnim").innerHTML = `
-    ${framesHtml}
+    ${gymHtml}
+    ${showFrames ? framesHtml : ""}
     ${btn3dHtml}
     <iframe
       src="https://www.youtube-nocookie.com/embed/${data.videoId}?rel=0"
@@ -1641,13 +1702,27 @@ function openTechniqueModal(name, data){
   `;
   $("#techniqueSteps").innerHTML = data.pasos.map(p => `<li>${p}</li>`).join("");
   $("#techniqueMistakes").innerHTML = data.errores.map(e => `<li>${e}</li>`).join("");
-  const framesEl = $("#techniqueAnim .technique-frames");
-  if(framesEl){
-    framesEl.addEventListener("click", () => {
-      const paused = framesEl.classList.toggle("paused");
-      framesEl.querySelector(".technique-frames-hint").textContent = paused ? "Pausado · toca para seguir" : "Toca para pausar";
+  const gifImg = $("#techniqueGif img");
+  if(gifImg && frames){
+    // Sin conexión o GIF no disponible: cambia a los fotogramas SVG locales.
+    gifImg.addEventListener("error", () => {
+      const box = $("#techniqueGif");
+      if(!box) return;
+      const tmp = document.createElement("div");
+      tmp.innerHTML = framesHtml;
+      box.replaceWith(tmp.firstElementChild);
+      wireFrames();
+    }, { once: true });
+  }
+  function wireFrames(){
+    const el = $("#techniqueAnim .technique-frames");
+    if(!el) return;
+    el.addEventListener("click", () => {
+      const paused = el.classList.toggle("paused");
+      el.querySelector(".technique-frames-hint").textContent = paused ? "Pausado · toca para seguir" : "Toca para pausar";
     });
   }
+  wireFrames();
   const btn3d = $("#technique3dBtn");
   if(btn3d){
     btn3d.addEventListener("click", () => {
